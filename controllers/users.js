@@ -1,7 +1,9 @@
 const {
     user_tokens: userTokenSchema,
     users: userSchema,
-    user_documents: userDocumentSchema
+    user_documents: userDocumentSchema,
+    user_eductions: userEductionsSchema,
+    users_experiences: userExperienceSchema
 } = require("../models/index")
 var jwt = require('jsonwebtoken');
 const { saveBase64File } = require("../utils/helper");
@@ -97,8 +99,7 @@ const signIn = async (req, res) => {
 const addUserDocument = async (req, res) => {
     try {
 
-        const { user_id, aadhar_number, pancard_number } = req.body;
-        const { aadhar_front, aadhar_back, pancard } = req.files;
+        const { user_id, aadhar_number, pancard_number, aadhar_front, aadhar_back, pancard } = req?.body;
 
         if (!aadhar_front || !aadhar_back || !pancard) {
             return res.status(400).json({ error: true, message: 'All document fields are required' });
@@ -133,8 +134,55 @@ const addUserDocument = async (req, res) => {
     }
 };
 
+// add user eduction
+const addUserEducation = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+        console.log('bodyData: ', bodyData);
+
+        const existingEducation = await userEductionsSchema.findOne({
+            where: { user_id: bodyData?.user_id }
+        });
+
+        if (existingEducation) {
+            return res.status(400).json({ error: true, message: 'User education already exists!' });
+        }
+
+        await userEductionsSchema.create(bodyData);
+
+        res.status(200).json({ error: false, message: 'Education added successfully!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to add education!' });
+    }
+};
+
+// add user experience
+const addUserExperience = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+
+        const existingExperience = await userExperienceSchema.findOne({
+            where: { user_id: bodyData?.user_id }
+        });
+
+        if (existingExperience) {
+            return res.status(400).json({ error: true, message: 'User experience already exists!' });
+        }
+
+        await userExperienceSchema.create(bodyData);
+
+        res.status(200).json({ error: false, message: 'Experience added successfully!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to add experience!' });
+    }
+};
+
 module.exports = {
     userRegister,
     signIn,
-    addUserDocument
+    addUserDocument,
+    addUserEducation,
+    addUserExperience
 }
