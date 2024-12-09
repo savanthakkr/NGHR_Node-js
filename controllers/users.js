@@ -73,7 +73,7 @@ const signIn = async (req, res) => {
             return res.status(400).json({ message: "User is not available in our system" });
         }
 
-        const token = generateToken(findUser?.email);
+        const token = generateToken(findUser?.email); // passs use_id in this fotgenrate token.
 
         await userTokenSchema.destroy({ where: { user_id: findUser.id } });
 
