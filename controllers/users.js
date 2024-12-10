@@ -3,10 +3,30 @@ const {
     users: userSchema,
     user_documents: userDocumentSchema,
     user_eductions: userEductionsSchema,
-    users_experiences: userExperienceSchema
+    users_experiences: userExperienceSchema,
+    profile_preferences: profilePreferencesSchema
 } = require("../models/index")
 var jwt = require('jsonwebtoken');
 const { saveBase64File } = require("../utils/helper");
+
+// Get user token info
+const getUserTokenInfo = async (access_token) => {
+    return await userTokenSchema.findOne({
+        where: {
+            access_token,
+        },
+        attributes: ["user_id", "createdAt", "updatedAt"],
+        include: [
+            {
+                model: userSchema,
+                attributes: { exclude: ["createdAt", "updatedAt", "password"] },
+                where: {
+                    status: 1,
+                },
+            },
+        ],
+    });
+};
 
 // GenerateToken
 const generateToken = (user) => {
@@ -73,11 +93,11 @@ const signIn = async (req, res) => {
             return res.status(400).json({ message: "User is not available in our system" });
         }
 
-        const token = generateToken(findUser?.email); // passs use_id in this fotgenrate token.
+        const token = generateToken(findUser?.id);
 
-        await userTokenSchema.destroy({ where: { user_id: findUser.id } });
+        await userTokenSchema.destroy({ where: { user_id: findUser?.id } });
 
-        await userTokenSchema.create({ access_token: token, user_id: findUser.id });
+        await userTokenSchema.create({ access_token: token, user_id: findUser?.id });
 
         const userData = await userSchema.findOne({
             attributes: ['id', 'email', 'status'],
@@ -179,10 +199,196 @@ const addUserExperience = async (req, res) => {
     }
 };
 
+// get user by id
+const getUserByAuthToken = async (req, res) => {
+    try {
+        const data = await userSchema.findOne({
+            where: {
+                id: req?.userInfo?.id,
+            }
+        });
+
+        if (!data) {
+            res.status(400).json({ error: true, message: 'User not found!!' });
+            return;
+        };
+
+        res
+            .status(200)
+            .json({ error: false, message: "Request has been completed successfully!!", data });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to get data!' });
+        return;
+    }
+};
+
+// update user
+const updateUser = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+
+        const checkUser = await userSchema.findOne({
+            where: {
+                id: req?.userInfo?.id,
+            }
+        });
+
+        if (!checkUser) {
+            res.status(400).json({ error: true, message: 'User not found!!' });
+            return;
+        }
+
+        const profileImage = await saveBase64File(bodyData?.profile_image, 'uploads');
+        bodyData.profile_image = profileImage;
+        const ok = await userSchema.update(bodyData, {
+            where: {
+                id: bodyData?.id,
+            }
+        });
+
+        const data = await userSchema.findOne({
+            where: {
+                id: bodyData?.id,
+            }
+        });
+
+        res.status(200).json({
+            error: false,
+            message: 'User updated successfully!!!',
+            documentId: data,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Internal server error!!' });
+        return;
+    }
+}
+
+// update user preferences
+const updateUserPreferences = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+        console.log('bodyData: ', bodyData);
+
+        const checkUser = await userSchema.findOne({
+            where: {
+                id: req?.userInfo?.id,
+            }
+        });
+
+        if (!checkUser) {
+            res.status(400).json({ error: true, message: 'User not found!!' });
+            return;
+        }
+
+        let userPreferences = await profilePreferencesSchema.findOne({
+            where: {
+                user_id: req?.userInfo?.id,
+            }
+        });
+
+        if (bodyData?.experienceLevels) {
+            bodyData.experienceLevels = Object.keys(bodyData.experienceLevels)
+                .filter(level => bodyData.experienceLevels[level])
+                .join(', ');
+        }
+
+        // If the user already has preferences, update them
+        if (userPreferences) {
+            await profilePreferencesSchema.update(bodyData, {
+                where: {
+                    user_id: req?.userInfo?.id,
+                }
+            });
+        } else {
+            bodyData.user_id = req?.userInfo?.id;
+            await profilePreferencesSchema.create(bodyData);
+        }
+
+        const data = await profilePreferencesSchema.findOne({
+            where: {
+                user_id: req?.userInfo?.id,
+            }
+        });
+
+        res.status(200).json({
+            error: false,
+            message: 'User preferences updated successfully!!!',
+            documentId: data,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Internal server error!!' });
+        return;
+    }
+};
+
+// get user preferences
+const getUserPreferences = async (req, res) => {
+    try {
+        const data = await profilePreferencesSchema.findOne({
+            where: {
+                user_id: req?.userInfo?.id,
+            }
+        });
+
+        if (!data) {
+            res.status(400).json({ error: true, message: 'User Preference data is not found!!' });
+            return;
+        };
+
+        res
+            .status(200)
+            .json({ error: false, message: "Request has been completed successfully!!", data });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to get data!' });
+        return;
+    }
+}
+
+// get user experience
+const getUserExperience = async (req, res) => {
+    try {
+        const userId = req.userInfo.id;
+
+        const experiences = await userExperienceSchema.findAll({
+            where: { user_id : userId }
+        });
+
+        if (!experiences || experiences.length === 0) {
+            return res.status(404).json({
+                status: "fail",
+                message: "No experience data found for the user."
+            });
+        }
+
+        res.status(200).json({
+            status: "success",
+            data: {
+                experiences
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching user experience:", error);
+        res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching experience data."
+        });
+    }
+};
+
 module.exports = {
     userRegister,
     signIn,
     addUserDocument,
     addUserEducation,
-    addUserExperience
+    addUserExperience,
+    getUserByAuthToken,
+    getUserTokenInfo,
+    updateUser,
+    updateUserPreferences,
+    getUserPreferences,
+    getUserExperience
 }

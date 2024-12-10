@@ -28,6 +28,10 @@ module.exports = {
         type: Sequelize.STRING(350),
         allowNull: true
       },
+      start_year: {
+        type: Sequelize.STRING(350),
+        allowNull: true
+      },
       end_month: {
         type: Sequelize.STRING(350),
         allowNull: true

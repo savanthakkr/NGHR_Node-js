@@ -35,11 +35,15 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(350),
             allowNull: true
         },
+        end_year: {
+            type: DataTypes.STRING(350),
+            allowNull: true
+        },
         end_month: {
             type: DataTypes.STRING(350),
             allowNull: true
         },
-        end_year: {
+        start_year: {
             type: DataTypes.STRING(350),
             allowNull: true
         },
