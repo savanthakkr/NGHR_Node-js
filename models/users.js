@@ -22,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "user_id",
                 onDelete: 'cascade'
             });
+
+            users.hasOne(models.profile_preferences, {
+                foreignKey: "user_id",
+                onDelete: 'cascade'
+            });
         }
     }
     users.init({
@@ -55,6 +60,34 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.TINYINT(1),
             defaultValue: 1,
             comment: "0 => not active, 1 => active"
+        },
+        age: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        username: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        language: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        location: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        country: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        bio: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        profile_image: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
         },
         createdAt: {
             allowNull: false,
