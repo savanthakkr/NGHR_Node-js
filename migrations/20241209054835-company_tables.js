@@ -45,6 +45,30 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: true,
       },
+      company_size: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
+      location: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
+      google_map_link: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
+      working_field: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
+      short_desc: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
+      image: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
