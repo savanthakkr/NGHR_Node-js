@@ -7,6 +7,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "company_user_id",
                 onDelete: 'cascade'
             });
+
+            companies.hasOne(models.post_job_vaccancies, {
+                foreignKey: "company_id",
+                onDelete: 'cascade'
+            });
         }
     }
     companies.init({
