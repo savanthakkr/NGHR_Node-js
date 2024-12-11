@@ -4,10 +4,11 @@ const {
     user_documents: userDocumentSchema,
     user_eductions: userEductionsSchema,
     users_experiences: userExperienceSchema,
-    profile_preferences: profilePreferencesSchema
+    profile_preferences: profilePreferencesSchema,
+    companies: companiesSchema,
+
 } = require("../models/index")
-var jwt = require('jsonwebtoken');
-const { saveBase64File } = require("../utils/helper");
+const { saveBase64File, generateToken } = require("../utils/helper");
 
 // Get user token info
 const getUserTokenInfo = async (access_token) => {
@@ -20,17 +21,18 @@ const getUserTokenInfo = async (access_token) => {
             {
                 model: userSchema,
                 attributes: { exclude: ["createdAt", "updatedAt", "password"] },
+                required: false,
                 where: {
                     status: 1,
                 },
             },
+            {
+                model: companiesSchema,
+                required: false,
+                attributes: { exclude: ["createdAt", "updatedAt", "password"] },
+            },
         ],
     });
-};
-
-// GenerateToken
-const generateToken = (user) => {
-    return jwt.sign({ email: user.email }, 'crud', { expiresIn: '24h' });
 };
 
 // user register
@@ -85,27 +87,32 @@ const userRegister = async (req, res) => {
 // sign in
 const signIn = async (req, res) => {
     try {
-        const { mobile } = req.body;
+        const { mobile, user_type } = req.body;
 
-        const findUser = await userSchema.findOne({ where: { mobile: mobile } });
+        const findUser = await userSchema.findOne({ where: { mobile: mobile, user_type: user_type } });
 
         if (!findUser) {
             return res.status(400).json({ message: "User is not available in our system" });
         }
 
-        const token = generateToken(findUser?.id);
+        const token = await generateToken(findUser?.id);
 
         await userTokenSchema.destroy({ where: { user_id: findUser?.id } });
 
-        await userTokenSchema.create({ access_token: token, user_id: findUser?.id });
+        await userTokenSchema.create({ access_token: token, user_id: findUser?.id, user_type: user_type });
 
         const userData = await userSchema.findOne({
             attributes: ['id', 'email', 'status'],
             where: { email: findUser?.email },
-            include: {
-                attributes: ['access_token', 'user_id'],
-                model: userTokenSchema,
-            },
+            include: [
+                {
+                    model: userTokenSchema,
+                    attributes: ['access_token', 'user_id'],
+                    where: {
+                        user_type: user_type
+                    }
+                }
+            ]
         });
 
         return res.status(200).json({ message: "Login successful!", userData });
@@ -241,7 +248,7 @@ const updateUser = async (req, res) => {
 
         const profileImage = await saveBase64File(bodyData?.profile_image, 'uploads');
         bodyData.profile_image = profileImage;
-        const ok = await userSchema.update(bodyData, {
+        await userSchema.update(bodyData, {
             where: {
                 id: bodyData?.id,
             }
@@ -354,7 +361,7 @@ const getUserExperience = async (req, res) => {
         const userId = req.userInfo.id;
 
         const experiences = await userExperienceSchema.findAll({
-            where: { user_id : userId }
+            where: { user_id: userId }
         });
 
         if (!experiences || experiences.length === 0) {

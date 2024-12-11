@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+var jwt = require('jsonwebtoken');
 
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
@@ -33,6 +34,12 @@ async function saveBase64File(base64String, folder) {
     }
 }
 
+// GenerateToken
+const generateToken = (user) => {
+    return jwt.sign({ email: user.email }, 'crud', { expiresIn: '24h' });
+};
+
 module.exports = {
-    saveBase64File
+    saveBase64File,
+    generateToken
 };

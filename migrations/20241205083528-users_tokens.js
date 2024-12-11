@@ -20,10 +20,20 @@ module.exports = {
         type: Sequelize.STRING(255)
       },
       user_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.BIGINT(20).UNSIGNED,
         references: { model: "users", key: "id" }
       },
+      company_user_id: {
+        allowNull: true,
+        type: Sequelize.BIGINT(20).UNSIGNED,
+        references: { model: "companies", key: "id" }
+      },
+      // user_type:{
+      //   allowNull: false,
+      //   type:Sequelize.STRING(255),
+      //   comment: "0 => user, 1 => company, 2 => consultant"
+      // },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

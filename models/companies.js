@@ -3,6 +3,10 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class companies extends Model {
         static associate(models) {
+            companies.hasOne(models.user_tokens, {
+                foreignKey: "company_user_id",
+                onDelete: 'cascade'
+            });
         }
     }
     companies.init({
@@ -45,6 +49,30 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         company_type: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        company_size: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        location: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        google_map_link: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        working_field: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        short_desc: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        image: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },

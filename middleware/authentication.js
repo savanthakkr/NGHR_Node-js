@@ -15,7 +15,15 @@ const userAuth = async (req, res, next) => {
             return;
         }
 
-        req.userInfo = userToken ? userToken.user ? userToken.user['dataValues'] : null : null;
+        // req.userInfo = userToken ? userToken.user ? userToken.user['dataValues'] : null : null;
+
+        if (userToken && userToken?.user) {
+            req.userInfo = userToken?.user?.dataValues;
+        } else if (userToken && userToken?.company) {
+            req.userInfo = userToken.company.dataValues;
+        } else {
+            return res.status(404).send({ message: 'No valid user or company data found' });
+        }
 
         next();
     } catch (error) {
