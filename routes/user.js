@@ -3,7 +3,7 @@ const router = express.Router();
 
 const { userRegister, signIn, addUserDocument,
     addUserEducation, addUserExperience, getUserByAuthToken, updateUser,
-    updateUserPreferences, getUserPreferences,getUserExperience
+    updateUserPreferences, getUserPreferences, getUserExperience, getUserJob
 } = require("../controllers/users.js");
 const { userAuth } = require("../middleware/authentication.js")
 // sign in
@@ -35,5 +35,9 @@ router.route('/get/preferences').get(userAuth, getUserPreferences);
 
 // user experience by id
 router.route('/experience').get(userAuth, getUserExperience);
+
+// get user job
+router.route('/list').post(userAuth, getUserJob);
+
 
 module.exports = router;
