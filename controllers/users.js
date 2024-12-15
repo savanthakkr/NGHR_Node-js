@@ -6,6 +6,7 @@ const {
     users_experiences: userExperienceSchema,
     profile_preferences: profilePreferencesSchema,
     companies: companiesSchema,
+    post_job_vaccancies: postJobSchema,
 
 } = require("../models/index")
 const { saveBase64File, generateToken } = require("../utils/helper");
@@ -89,7 +90,7 @@ const signIn = async (req, res) => {
     try {
         const { mobile, user_type } = req.body;
 
-        const findUser = await userSchema.findOne({ where: { mobile: mobile, user_type: user_type } });
+        const findUser = await userSchema.findOne({ where: { mobile: mobile, type: user_type } });
 
         if (!findUser) {
             return res.status(400).json({ message: "User is not available in our system" });
@@ -99,7 +100,7 @@ const signIn = async (req, res) => {
 
         await userTokenSchema.destroy({ where: { user_id: findUser?.id } });
 
-        await userTokenSchema.create({ access_token: token, user_id: findUser?.id, user_type: user_type });
+        await userTokenSchema.create({ access_token: token, user_id: findUser?.id });
 
         const userData = await userSchema.findOne({
             attributes: ['id', 'email', 'status'],
@@ -109,7 +110,7 @@ const signIn = async (req, res) => {
                     model: userTokenSchema,
                     attributes: ['access_token', 'user_id'],
                     where: {
-                        user_type: user_type
+                        user_id: findUser?.id
                     }
                 }
             ]
@@ -386,6 +387,65 @@ const getUserExperience = async (req, res) => {
     }
 };
 
+// get user job
+const getUserJob = async (req, res) => {
+    try {
+        const user_id = req?.userInfo?.id;
+        const bodyData = req?.body;
+        console.log('bodyData: ', bodyData);
+
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        const filters = [];
+
+        if (bodyData?.filters?.length > 0) {
+            bodyData?.filters.map((filter) => {
+                if (filter?.value && filter?.id) {
+                    filters[filter?.id] = filter?.value;
+                }
+            });
+        }
+
+        const data = await postJobSchema.findAll({
+            where: { ...filters },
+            include: {
+                model: companiesSchema,
+                attributes: ['company_name', 'id', 'image'],
+            },
+            limit: itemsPerPage,
+            offset: offset
+        });
+
+        const totalJobs = await postJobSchema.count({
+            where: { ...filters },
+        });
+
+        const totalCount = Math.ceil(totalJobs / itemsPerPage);
+
+        if (data?.length === 0) {
+            return res.status(404).json({ error: true, message: 'No jobs found for this company!' });
+        }
+
+        // get similar job
+        // const similarJob = await postJobSchema.findAll({
+        //     where:{
+        //         basic_job_title:
+        //     }
+        // })
+        return res.status(200).json({
+            error: false,
+            message: 'Job data fetched successfully!',
+            data: data,
+            count: totalCount
+        });
+    } catch (error) {
+        console.error('Error while fetching job:', error);
+        return res.status(500).json({ error: true, message: 'Failed to get job!' });
+    }
+};
+
 module.exports = {
     userRegister,
     signIn,
@@ -397,5 +457,6 @@ module.exports = {
     updateUser,
     updateUserPreferences,
     getUserPreferences,
-    getUserExperience
+    getUserExperience,
+    getUserJob
 }
