@@ -2,7 +2,9 @@
 const {
     companies: companiesSchema,
     user_tokens: userTokenSchema,
-} = require("../models/index.js");
+    post_job_vaccancies: postJobSchema,
+
+} = require("../models/index.js"); 
 const { saveBase64File, generateToken } = require("../utils/helper.js");
 
 // signup
@@ -153,9 +155,69 @@ const updateUserProfile = async (req, res) => {
     }
 }
 
+// get company list
+const getCompanyList = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+
+        if (!userInfo) {
+            return res.status(401).json({ error: true, message: 'Unauthorized access!' });
+        }
+
+        const bodyData = req?.body;
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        const filters = [];
+
+        if (bodyData?.filters?.length > 0) {
+            bodyData?.filters.forEach((filter) => {
+                if (filter?.value && filter?.id) {
+                    filters[filter?.id] = filter?.value;
+                }
+            });
+        }
+
+        const data = await companiesSchema.findAll({
+            where: { ...filters },
+            include: [
+                {
+                    model: postJobSchema,
+                    attributes: ['id', 'basic_job_title', 'location'],
+                }
+            ],
+            limit: itemsPerPage,
+            offset: offset
+        });
+
+        const totalCompanies = await companiesSchema.count({
+            where: { ...filters },
+        });
+
+        const totalCount = Math.ceil(totalCompanies / itemsPerPage);
+
+        if (data?.length === 0) {
+            return res.status(404).json({ error: true, message: 'No Record Found!' });
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: 'Company data fetched successfully!',
+            data: data,
+            count: totalCount
+        });
+    } catch (error) {
+        console.error('Error while fetching job:', error);
+        return res.status(500).json({ error: true, message: 'Failed to get job!' });
+    }
+};
+
+
 module.exports = {
     signup,
     signIn,
     getCompanyUserByAuthToken,
-    updateUserProfile
+    updateUserProfile,
+    getCompanyList
 }

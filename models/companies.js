@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
                 onDelete: 'cascade'
             });
 
-            companies.hasOne(models.post_job_vaccancies, {
+            companies.hasMany(models.post_job_vaccancies, {
                 foreignKey: "company_id",
                 onDelete: 'cascade'
             });
