@@ -7,9 +7,10 @@ const {
     profile_preferences: profilePreferencesSchema,
     companies: companiesSchema,
     post_job_vaccancies: postJobSchema,
-
+    user_saved_jobs: userSavedJobsSchema
 } = require("../models/index")
-const { saveBase64File, generateToken } = require("../utils/helper");
+const { saveBase64File, generateToken, getDateRange } = require("../utils/helper");
+const Sequelize = require('sequelize');
 
 // Get user token info
 const getUserTokenInfo = async (access_token) => {
@@ -166,7 +167,6 @@ const addUserDocument = async (req, res) => {
 const addUserEducation = async (req, res) => {
     try {
         const bodyData = req?.body;
-        console.log('bodyData: ', bodyData);
 
         const existingEducation = await userEductionsSchema.findOne({
             where: { user_id: bodyData?.user_id }
@@ -277,7 +277,6 @@ const updateUser = async (req, res) => {
 const updateUserPreferences = async (req, res) => {
     try {
         const bodyData = req?.body;
-        console.log('bodyData: ', bodyData);
 
         const checkUser = await userSchema.findOne({
             where: {
@@ -392,31 +391,52 @@ const getUserJob = async (req, res) => {
     try {
         const user_id = req?.userInfo?.id;
         const bodyData = req?.body;
-        console.log('bodyData: ', bodyData);
 
         const currentPage = bodyData?.currentPage || 1;
         const itemsPerPage = bodyData?.itemsPerPage || 5;
         const offset = (currentPage - 1) * itemsPerPage;
 
-        const filters = [];
+        const filters = {};
 
         if (bodyData?.filters?.length > 0) {
             bodyData?.filters.map((filter) => {
-                if (filter?.value && filter?.id) {
+                if (filter?.id === 'category') {
+                    const categories = bodyData?.filters
+                        .filter(f => f?.id === 'category')
+                        .map(f => ({
+                            [Sequelize.Op.like]: `%${f?.value.trim()}%`
+                        }));
+                    if (categories.length > 0) {
+                        filters['category'] = {
+                            [Sequelize.Op.or]: categories
+                        };
+                    }
+                } else if (filter?.id === 'job_post_date') {
+                    const { startDate, endDate } = getDateRange(filter?.value);
+                    filters['createdAt'] = {
+                        [Sequelize.Op.gte]: startDate,
+                        [Sequelize.Op.lte]: endDate,
+                    };
+                } else {
                     filters[filter?.id] = filter?.value;
+
                 }
             });
         }
 
         const data = await postJobSchema.findAll({
             where: { ...filters },
-            include: {
-                model: companiesSchema,
-                attributes: ['company_name', 'id', 'image'],
-            },
+            include: [
+                {
+                    model: companiesSchema,
+                    attributes: ['company_name', 'id', 'image'],
+                }
+            ],
             limit: itemsPerPage,
-            offset: offset
+            offset: offset,
+            logging: true
         });
+
 
         const totalJobs = await postJobSchema.count({
             where: { ...filters },
@@ -428,12 +448,6 @@ const getUserJob = async (req, res) => {
             return res.status(404).json({ error: true, message: 'No jobs found for this company!' });
         }
 
-        // get similar job
-        // const similarJob = await postJobSchema.findAll({
-        //     where:{
-        //         basic_job_title:
-        //     }
-        // })
         return res.status(200).json({
             error: false,
             message: 'Job data fetched successfully!',
@@ -445,6 +459,82 @@ const getUserJob = async (req, res) => {
         return res.status(500).json({ error: true, message: 'Failed to get job!' });
     }
 };
+
+// user saved job
+const userSavedJob = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+        const { job_id } = req?.body;
+
+        if (!userInfo) {
+            return res.status(400).json({ error: true, message: "User not available in our system." });
+        }
+
+        const existingEntry = await userSavedJobsSchema.findOne({
+            where: { job_id: job_id, user_id: userInfo?.id }
+        });
+
+        if (existingEntry) {
+            await userSavedJobsSchema.destroy({ where: { job_id: job_id, user_id: userInfo?.id } });
+            return res.status(200).json({
+                error: false,
+                message: "Job unsaved successfully!",
+            });
+        }
+
+        const newSavedJob = await userSavedJobsSchema.create({
+            job_id: job_id,
+            user_id: userInfo?.id
+        });
+
+        return res.status(200).json({
+            error: false,
+            message: "Job saved successfully!",
+            data: newSavedJob
+        });
+    } catch (error) {
+        console.error('Error while job save status:', error);
+        return res.status(500).json({ error: true, message: 'Failed to job save status!' });
+    }
+};
+
+// get user saved job
+const getUserSavedJob = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+
+        if (!userInfo) {
+            return res.status(400).json({ error: true, message: "User is not available in our system." });
+        }
+
+        const savedJobs = await userSavedJobsSchema.findAll({
+            where: { user_id: userInfo?.id },
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+            include: [
+                {
+                    model: postJobSchema,
+                    attributes: { exclude: ["updatedAt"] },
+                    include: [
+                        {
+                            model: companiesSchema,
+                            attributes: { exclude: ["createdAt", "updatedAt", "aadhar_front", "aadhar_back", "aadhar_card_number", "pan_card", "pan_card_number"] },
+                        },
+                    ],
+                },
+            ],
+        });
+
+        return res.status(200).json({
+            error: false,
+            message: "User saved jobs fetched successfully!",
+            data: savedJobs,
+        });
+    } catch (error) {
+        console.error('Error while fetching user saved jobs:', error);
+        return res.status(500).json({ error: true, message: 'Failed to fetch user saved jobs!' });
+    }
+};
+
 
 module.exports = {
     userRegister,
@@ -458,5 +548,7 @@ module.exports = {
     updateUserPreferences,
     getUserPreferences,
     getUserExperience,
-    getUserJob
+    getUserJob,
+    userSavedJob,
+    getUserSavedJob
 }

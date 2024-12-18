@@ -3,9 +3,11 @@ const router = express.Router();
 
 const { userRegister, signIn, addUserDocument,
     addUserEducation, addUserExperience, getUserByAuthToken, updateUser,
-    updateUserPreferences, getUserPreferences, getUserExperience, getUserJob
+    updateUserPreferences, getUserPreferences, getUserExperience, getUserJob,
+    userSavedJob,getUserSavedJob
 } = require("../controllers/users.js");
-const { userAuth } = require("../middleware/authentication.js")
+const { userAuth } = require("../middleware/authentication.js");
+
 // sign in
 router.route('/signin').post(signIn);
 
@@ -39,5 +41,10 @@ router.route('/experience').get(userAuth, getUserExperience);
 // get user job
 router.route('/list').post(userAuth, getUserJob);
 
+// user saved job
+router.route('/save/job').post(userAuth, userSavedJob);
+
+// get user saved job
+router.route('/save/job').get(userAuth, getUserSavedJob);
 
 module.exports = router;
