@@ -7,6 +7,12 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "company_id",
                 onDelete: 'cascade'
             });
+
+            post_job_vaccancies.hasMany(models.user_saved_jobs, {
+                foreignKey: "job_id",
+                onDelete: 'cascade'
+            });
+
         }
     }
 

@@ -27,6 +27,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "user_id",
                 onDelete: 'cascade'
             });
+
+            users.hasMany(models.user_saved_jobs, {
+                foreignKey: "user_id",
+                onDelete: 'cascade'
+            });
         }
     }
     users.init({
