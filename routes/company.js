@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { userAuth } = require("../middleware/authentication.js")
 
-const { signup, signIn ,getCompanyUserByAuthToken, 
-    updateUserProfile, getCompanyList
+const { signup, signIn, getCompanyUserByAuthToken,
+    updateUserProfile, getCompanyList, getCompanyById
 } = require('../controllers/companies.js');
 
 
@@ -22,6 +22,9 @@ router.route('/update').put(userAuth, updateUserProfile);
 
 // get company list
 router.route('/list').post(userAuth, getCompanyList);
+
+// get company by id
+router.route('/:id').get(userAuth, getCompanyById);
 
 
 module.exports = router;

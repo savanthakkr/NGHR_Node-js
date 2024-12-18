@@ -4,8 +4,9 @@ const {
     user_tokens: userTokenSchema,
     post_job_vaccancies: postJobSchema,
 
-} = require("../models/index.js"); 
-const { saveBase64File, generateToken } = require("../utils/helper.js");
+} = require("../models/index.js");
+const { saveBase64File, generateToken, getDateRange } = require("../utils/helper.js");
+const Sequelize = require('sequelize');
 
 // signup
 const signup = async (req, res) => {
@@ -169,11 +170,45 @@ const getCompanyList = async (req, res) => {
         const itemsPerPage = bodyData?.itemsPerPage || 5;
         const offset = (currentPage - 1) * itemsPerPage;
 
-        const filters = [];
+        const filters = {};
+        const jobQuery = {};
 
         if (bodyData?.filters?.length > 0) {
             bodyData?.filters.forEach((filter) => {
-                if (filter?.value && filter?.id) {
+                if (filter?.id === 'basic_job_title') {
+                    jobQuery['basic_job_title'] = {
+                        [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
+                    };
+                } else if (filter?.id === 'job_type') {
+                    jobQuery['job_type'] = {
+                        [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
+                    };
+                } else if (filter?.id === 'base_salary_range') {
+                    jobQuery['base_salary_range'] = {
+                        [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
+                    };
+                } else if (filter?.id === 'job_post_date') {
+                    const { startDate, endDate } = getDateRange(filter?.value);
+                    jobQuery['createdAt'] = {
+                        [Sequelize.Op.gte]: startDate,
+                        [Sequelize.Op.lte]: endDate,
+                    };
+                } else if (filter?.id === 'experience') {
+                    jobQuery['experience'] = {
+                        [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
+                    };
+                } else if (filter?.id === 'category') {
+                    const categories = bodyData?.filters
+                        .filter(f => f?.id === 'category')
+                        .map(f => ({
+                            [Sequelize.Op.like]: `%${f?.value.trim()}%`
+                        }));
+                    if (categories.length > 0) {
+                        jobQuery['category'] = {
+                            [Sequelize.Op.or]: categories
+                        };
+                    }
+                } else {
                     filters[filter?.id] = filter?.value;
                 }
             });
@@ -184,11 +219,12 @@ const getCompanyList = async (req, res) => {
             include: [
                 {
                     model: postJobSchema,
+                    where: { ...jobQuery },
                     attributes: ['id', 'basic_job_title', 'location'],
-                }
+                },
             ],
             limit: itemsPerPage,
-            offset: offset
+            offset: offset,
         });
 
         const totalCompanies = await companiesSchema.count({
@@ -205,19 +241,54 @@ const getCompanyList = async (req, res) => {
             error: false,
             message: 'Company data fetched successfully!',
             data: data,
-            count: totalCount
+            pageCount: totalCount
         });
     } catch (error) {
-        console.error('Error while fetching job:', error);
-        return res.status(500).json({ error: true, message: 'Failed to get job!' });
+        console.error('Error while fetching companies:', error);
+        return res.status(500).json({ error: true, message: 'Failed to get company data!' });
     }
 };
 
+// get company by id
+const getCompanyById = async (req, res) => {
+    try {
+        const company_id = req.params.id;
+
+        const company = await companiesSchema.findOne({
+            where: {
+                id: company_id,
+            },
+            include: {
+                model: postJobSchema,
+            },
+        });
+
+        if (!company) {
+            return res.status(404).json({
+                error: true,
+                message: 'Company not found!'
+            });
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: 'Company data fetched successfully!',
+            data: company,
+        });
+    } catch (error) {
+        console.log('Error while fetching company by ID:', error);
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to fetch company by ID!'
+        });
+    }
+}
 
 module.exports = {
     signup,
     signIn,
     getCompanyUserByAuthToken,
     updateUserProfile,
-    getCompanyList
+    getCompanyList,
+    getCompanyById
 }

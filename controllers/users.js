@@ -9,7 +9,8 @@ const {
     post_job_vaccancies: postJobSchema,
 
 } = require("../models/index")
-const { saveBase64File, generateToken } = require("../utils/helper");
+const { saveBase64File, generateToken, getDateRange } = require("../utils/helper");
+const Sequelize = require('sequelize');
 
 // Get user token info
 const getUserTokenInfo = async (access_token) => {
@@ -166,7 +167,6 @@ const addUserDocument = async (req, res) => {
 const addUserEducation = async (req, res) => {
     try {
         const bodyData = req?.body;
-        console.log('bodyData: ', bodyData);
 
         const existingEducation = await userEductionsSchema.findOne({
             where: { user_id: bodyData?.user_id }
@@ -277,7 +277,6 @@ const updateUser = async (req, res) => {
 const updateUserPreferences = async (req, res) => {
     try {
         const bodyData = req?.body;
-        console.log('bodyData: ', bodyData);
 
         const checkUser = await userSchema.findOne({
             where: {
@@ -392,18 +391,35 @@ const getUserJob = async (req, res) => {
     try {
         const user_id = req?.userInfo?.id;
         const bodyData = req?.body;
-        console.log('bodyData: ', bodyData);
 
         const currentPage = bodyData?.currentPage || 1;
         const itemsPerPage = bodyData?.itemsPerPage || 5;
         const offset = (currentPage - 1) * itemsPerPage;
 
-        const filters = [];
+        const filters = {};
 
         if (bodyData?.filters?.length > 0) {
             bodyData?.filters.map((filter) => {
-                if (filter?.value && filter?.id) {
+                if (filter?.id === 'category') {
+                    const categories = bodyData?.filters
+                        .filter(f => f?.id === 'category')
+                        .map(f => ({
+                            [Sequelize.Op.like]: `%${f?.value.trim()}%`
+                        }));
+                    if (categories.length > 0) {
+                        filters['category'] = {
+                            [Sequelize.Op.or]: categories
+                        };
+                    }
+                } else if (filter?.id === 'job_post_date') {
+                    const { startDate, endDate } = getDateRange(filter?.value);
+                    filters['createdAt'] = {
+                        [Sequelize.Op.gte]: startDate,
+                        [Sequelize.Op.lte]: endDate,
+                    };
+                } else {
                     filters[filter?.id] = filter?.value;
+
                 }
             });
         }
@@ -428,12 +444,6 @@ const getUserJob = async (req, res) => {
             return res.status(404).json({ error: true, message: 'No jobs found for this company!' });
         }
 
-        // get similar job
-        // const similarJob = await postJobSchema.findAll({
-        //     where:{
-        //         basic_job_title:
-        //     }
-        // })
         return res.status(200).json({
             error: false,
             message: 'Job data fetched successfully!',
