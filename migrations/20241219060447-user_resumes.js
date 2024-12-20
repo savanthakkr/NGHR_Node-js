@@ -8,21 +8,27 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('user_tokens', {
+    await queryInterface.createTable('user_resumes', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.BIGINT(20).UNSIGNED
       },
-      access_token: {
-        allowNull: false,
-        type: Sequelize.STRING(255)
-      },
       user_id: {
-        allowNull: true,
+        allowNull: false,
         type: Sequelize.BIGINT(20).UNSIGNED,
         references: { model: "users", key: "id" }
+      },
+      resume: {
+        type: Sequelize.STRING(350),
+        allowNull: true
+      },
+      status: {
+        allowNull: false,
+        type: Sequelize.TINYINT(1),
+        defaultValue: 1,
+        comment: "0 => not active, 1 => active"
       },
       createdAt: {
         allowNull: false,
@@ -42,6 +48,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('user_tokens');
+    await queryInterface.dropTable('user_resumes');
   }
 };

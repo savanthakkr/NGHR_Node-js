@@ -3,10 +3,12 @@ const {
     companies: companiesSchema,
     user_tokens: userTokenSchema,
     post_job_vaccancies: postJobSchema,
-
+    company_images: companyImagesSchema
 } = require("../models/index.js");
 const { saveBase64File, generateToken, getDateRange } = require("../utils/helper.js");
 const Sequelize = require('sequelize');
+const { Op } = require('sequelize');
+const fs = require('fs');
 
 // signup
 const signup = async (req, res) => {
@@ -35,13 +37,32 @@ const signup = async (req, res) => {
             ...bodyData,
             company_name: bodyData?.company_name?.value,
             company_type: bodyData?.company_type?.value,
+            company_sector: bodyData?.company_sector?.value,
+            company_industry: bodyData?.company_industry?.value,
+            founded_in_year: bodyData?.founded_in_year?.value,
+            country: bodyData?.country?.value,
+            state: bodyData?.state?.value,
+            city: bodyData?.city?.value,
+            number_of_employee: bodyData?.number_of_employee?.value,
+            revenue_range: bodyData?.revenue_range?.value,
             aadhar_front: afPath,
             aadhar_back: abPath,
             pan_card: panPath,
         };
 
-        // Save data to the database
         const data = await companiesSchema.create(dataToSave);
+
+        if (bodyData?.company_images && bodyData?.company_images?.length > 0) {
+            const imagePromises = bodyData?.company_images?.map(async (imageBase64) => {
+                const imagePath = await saveBase64File(imageBase64?.image, 'company_images');
+                await companyImagesSchema.create({
+                    company_id: data?.id,
+                    image: imagePath,
+                });
+            });
+
+            await Promise.all(imagePromises);
+        }
 
         return res.status(200).json({
             error: false,
@@ -96,7 +117,12 @@ const getCompanyUserByAuthToken = async (req, res) => {
         const data = await companiesSchema.findOne({
             where: {
                 id: req?.userInfo?.id,
-            }
+            },
+            include: [
+                {
+                    model: companyImagesSchema,
+                }
+            ]
         });
 
         if (!data) {
@@ -130,24 +156,70 @@ const updateUserProfile = async (req, res) => {
             return;
         }
 
-        const profileImage = await saveBase64File(bodyData?.image, 'uploads');
-        bodyData.image = profileImage;
+        if (bodyData?.image && (bodyData?.image?.match(/^data:(.+);base64,(.+)$/))) {
+            const profileImage = await saveBase64File(bodyData?.image, 'uploads');
+            bodyData.image = profileImage;
+        }
+
         await companiesSchema.update(bodyData, {
             where: {
                 id: bodyData?.id,
             }
         });
 
+        // remove image from the folder
+        if (bodyData?.remove_images && bodyData?.remove_images?.length > 0) {
+            const imagesToRemove = await companyImagesSchema.findAll({
+                where: {
+                    id: { [Op.in]: bodyData.remove_images },
+                }
+            });
+
+            imagesToRemove?.map((image) => {
+                const fileName = image?.image?.split('/').pop();
+                const filePath = `uploads/${fileName}`;
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (error) {
+                    console.error(`Failed to delete file: ${filePath}`, error);
+                }
+            });
+
+            await companyImagesSchema.destroy({
+                where: {
+                    id: { [Op.in]: bodyData.remove_images, }
+                }
+            });
+        }
+
+        if (bodyData?.company_images && bodyData?.company_images?.length > 0) {
+            const imagePromises = bodyData?.company_images?.map(async (imageBase64) => {
+                if (!imageBase64?.image?.match(/^data:(.+);base64,(.+)$/)) {
+                    return;
+                } else {
+                    const imagePath = await saveBase64File(imageBase64?.image, 'uploads');
+                    await companyImagesSchema.create({
+                        company_id: bodyData?.id,
+                        image: imagePath,
+                    });
+                }
+
+            });
+
+            await Promise.all(imagePromises);
+        }
+
         const data = await companiesSchema.findOne({
             where: {
                 id: bodyData?.id,
-            }
+            },
+            include: { model: companyImagesSchema }
         });
 
         res.status(200).json({
             error: false,
             message: 'User updated successfully!!!',
-            documentId: data,
+            data: data,
         });
     } catch (error) {
         console.error(error);
