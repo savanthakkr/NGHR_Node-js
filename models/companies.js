@@ -12,6 +12,16 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "company_id",
                 onDelete: 'cascade'
             });
+
+            companies.hasOne(models.user_apply_jobs, {
+                foreignKey: "company_id",
+                onDelete: 'cascade'
+            });
+
+            companies.hasMany(models.company_images, {
+                foreignKey: "company_id",
+                onDelete: 'cascade'
+            });
         }
     }
     companies.init({
@@ -78,6 +88,42 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         image: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        company_sector: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        company_industry: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        founded_in_year: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        country: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        state: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        city: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        number_of_employee: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        revenue_range: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        description: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },

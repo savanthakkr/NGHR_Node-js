@@ -37,5 +37,11 @@ module.exports = {
       type: Sequelize.STRING(255),
       after: 'bio'
     });
+    await queryInterface.addColumn("user_tokens", "company_user_id", {
+      allowNull: true,
+      type: Sequelize.BIGINT(20).UNSIGNED,
+      references: { model: "companies", key: "id" },
+      after: 'user_id'
+    });
   },
 };

@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
                 onDelete: 'cascade'
             });
 
+            post_job_vaccancies.hasOne(models.user_apply_jobs, {
+                foreignKey: "job_id",
+                onDelete: 'cascade'
+            });
         }
     }
 

@@ -7,7 +7,9 @@ const {
     profile_preferences: profilePreferencesSchema,
     companies: companiesSchema,
     post_job_vaccancies: postJobSchema,
-    user_saved_jobs: userSavedJobsSchema
+    user_saved_jobs: userSavedJobsSchema,
+    user_resumes: userResumesSchema,
+    user_apply_jobs: userApplyJobsSchema
 } = require("../models/index")
 const { saveBase64File, generateToken, getDateRange } = require("../utils/helper");
 const Sequelize = require('sequelize');
@@ -535,6 +537,101 @@ const getUserSavedJob = async (req, res) => {
     }
 };
 
+// add user resume
+const addUserResume = async (req, res) => {
+    try {
+        const userInfo = req.userInfo;
+        const bodyData = req?.body;
+
+        if (!bodyData?.resume) {
+            return res.status(400).json({ error: true, message: 'Resume is required.' });
+        }
+
+        const resumePath = await saveBase64File(bodyData?.resume, 'uploads');
+
+        const newResume = await userResumesSchema.create({
+            user_id: userInfo?.id,
+            resume: resumePath,
+        });
+
+        return res.status(200).json({
+            error: false,
+            message: 'Resume added successfully!',
+            data: newResume,
+        });
+    } catch (error) {
+        console.error('Error while adding user resume:', error);
+        return res.status(500).json({ error: true, message: 'Internal server error.' });
+    }
+};
+
+// get user resume
+const getUserResume = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+
+        if (!userInfo) {
+            return res.status(400).json({ error: true, message: "User is not available in our system." });
+        }
+
+        const resumes = await userResumesSchema.findAll({
+            where: { user_id: userInfo?.id },
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+        });
+
+        if (!resumes || resumes.length === 0) {
+            return res.status(404).json({ error: true, message: "No resumes found for the user." });
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "User resumes fetched successfully!",
+            data: resumes,
+        });
+    } catch (error) {
+        console.error('Error while fetching user resumes:', error);
+        return res.status(500).json({ error: true, message: 'Internal server error.' });
+    }
+};
+
+// apply job
+const applyJob = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+        const bodyData = req?.body;
+
+        if (!userInfo) {
+            return res.status(400).json({ error: true, message: "User is not available in our system." });
+        }
+
+        if (!bodyData?.job_id || !bodyData?.resume_id) {
+            return res.status(400).json({ error: true, message: "Job ID and Resume ID are required." });
+        }
+
+        const existingApplication = await userApplyJobsSchema.findOne({
+            where: { user_id: userInfo?.id, job_id: bodyData?.job_id },
+        });
+
+        if (existingApplication) {
+            return res.status(400).json({
+                error: true,
+                message: "You have already applied for this job.",
+            });
+        }
+
+        const newApplication = await userApplyJobsSchema.create({ ...bodyData, user_id: userInfo?.id });
+
+        return res.status(200).json({
+            error: false,
+            message: "Job application submitted successfully!",
+            data: newApplication,
+        });
+
+    } catch (error) {
+        console.error('Error while apply job:', error);
+        return res.status(500).json({ error: true, message: 'Internal server error.' });
+    }
+}
 
 module.exports = {
     userRegister,
@@ -550,5 +647,8 @@ module.exports = {
     getUserExperience,
     getUserJob,
     userSavedJob,
-    getUserSavedJob
+    getUserSavedJob,
+    addUserResume,
+    getUserResume,
+    applyJob
 }
