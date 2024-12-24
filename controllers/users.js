@@ -106,7 +106,7 @@ const signIn = async (req, res) => {
         await userTokenSchema.create({ access_token: token, user_id: findUser?.id });
 
         const userData = await userSchema.findOne({
-            attributes: ['id', 'email', 'status'],
+            attributes: ['id', 'email', 'status', 'type'],
             where: { email: findUser?.email },
             include: [
                 {
