@@ -4,7 +4,8 @@ const router = express.Router();
 const { userRegister, signIn, addUserDocument,
     addUserEducation, addUserExperience, getUserByAuthToken, updateUser,
     updateUserPreferences, getUserPreferences, getUserExperience, getUserJob,
-    userSavedJob, getUserSavedJob, addUserResume, getUserResume, applyJob
+    userSavedJob, getUserSavedJob, addUserResume, getUserResume, applyJob,
+    getUserListByJobId, getUserById
 } = require("../controllers/users.js");
 const { userAuth } = require("../middleware/authentication.js");
 
@@ -56,5 +57,10 @@ router.route('/resume').get(userAuth, getUserResume);
 // apply job
 router.route('/apply_job').post(userAuth, applyJob);
 
+// get user list by job id
+router.route('/list/job-id').post(userAuth, getUserListByJobId);
+
+// get user by id
+router.route('/:id').get(getUserById);
 
 module.exports = router;

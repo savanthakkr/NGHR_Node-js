@@ -55,8 +55,8 @@ module.exports = (sequelize, DataTypes) => {
         status: {
             allowNull: false,
             type: DataTypes.TINYINT(1),
-            defaultValue: 1,
-            comment: "0 => not active, 1 => active 2 => sort list"
+            defaultValue: 0,
+            comment: "0 => In Review, 1 => In Process 2 => sort list 3 => Rejected"
         },
         createdAt: {
             allowNull: false,
