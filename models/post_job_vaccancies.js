@@ -104,6 +104,12 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             type: DataTypes.DATE,
         },
+        status: {
+            allowNull: false,
+            type: DataTypes.TINYINT(1),
+            defaultValue: 1,
+            comment: "0 => not active, 1 => active"
+        },
     }, {
         sequelize,
         modelName: 'post_job_vaccancies',

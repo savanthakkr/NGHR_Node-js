@@ -633,6 +633,94 @@ const applyJob = async (req, res) => {
     }
 }
 
+// get user list by job id
+const getUserListByJobId = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+        const bodyData = req?.body;
+
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        const UserList = await userApplyJobsSchema.findAll({
+            where: {
+                job_id: bodyData?.jobId,
+                company_id: userInfo?.id,
+            },
+            include: [
+                {
+                    model: userSchema,
+                    attributes: ['id', 'name']
+                },
+                {
+                    model: postJobSchema,
+                    attributes: ['id', 'basic_job_title', 'createdAt']
+                }
+            ],
+            limit: itemsPerPage,
+            offset: offset,
+        });
+
+        const totalJobs = await userApplyJobsSchema.count({
+            where: {
+                company_id: userInfo?.id,
+                job_id: bodyData?.jobId,
+            },
+        });
+
+        const totalCount = Math.ceil(totalJobs / itemsPerPage);
+
+        return res.status(200).json({
+            error: false,
+            message: 'Job data fetched successfully!',
+            data: UserList,
+            totalCount: totalCount
+        });
+    } catch (error) {
+        console.log('Error while fetching User Data:', error);
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to fetch User List!'
+        });
+    }
+}
+
+// get user data by id
+const getUserById = async (req, res) => {
+    try {
+
+        const data = await userSchema.findOne({
+            where: {
+                id: req?.params?.id
+            },
+            include: [
+                {
+                    model: userApplyJobsSchema,
+                    include: {
+                        model: postJobSchema
+                    }
+                },
+            ]
+        });
+
+        if (!data) {
+            return res.status(400).json({ error: true, message: "User is not available in our system." });
+        }
+        return res.status(200).json({
+            error: false,
+            message: 'User data fetched successfully!',
+            data: data
+        });
+    } catch (error) {
+        console.log('Error while fetching User Data:', error);
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to fetch User data!'
+        });
+    }
+}
+
 module.exports = {
     userRegister,
     signIn,
@@ -650,5 +738,7 @@ module.exports = {
     getUserSavedJob,
     addUserResume,
     getUserResume,
-    applyJob
+    applyJob,
+    getUserListByJobId,
+    getUserById
 }
