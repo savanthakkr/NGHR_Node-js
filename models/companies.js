@@ -22,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "company_id",
                 onDelete: 'cascade'
             });
+
+            companies.hasMany(models.meeting_schedules, {
+                foreignKey: "company_id",
+                onDelete: 'cascade'
+            });
         }
     }
     companies.init({
