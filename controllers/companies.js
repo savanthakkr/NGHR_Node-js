@@ -252,7 +252,7 @@ const getCompanyList = async (req, res) => {
                         [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
                     };
                 } else if (filter?.id === 'job_type') {
-                    jobQuery['job_type'] = {
+                    jobQuery['category'] = {
                         [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
                     };
                 } else if (filter?.id === 'base_salary_range') {
@@ -276,7 +276,7 @@ const getCompanyList = async (req, res) => {
                             [Sequelize.Op.like]: `%${f?.value.trim()}%`
                         }));
                     if (categories.length > 0) {
-                        jobQuery['category'] = {
+                        jobQuery['job_type'] = {
                             [Sequelize.Op.or]: categories
                         };
                     }
