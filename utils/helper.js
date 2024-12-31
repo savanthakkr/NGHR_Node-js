@@ -3,6 +3,10 @@ const path = require('path');
 var jwt = require('jsonwebtoken');
 require('dotenv').config();
 const moment = require('moment');
+const { google } = require('googleapis');
+const serviceAccount = require('./service-account-key.json');
+const { GoogleAuth } = require('google-auth-library');
+const { v4: uuidv4 } = require('uuid');
 
 if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
@@ -62,8 +66,74 @@ const getDateRange = (period) => {
     return { startDate: startDate.toDate(), endDate: endDate.toDate() };
 };
 
+const auth = new GoogleAuth({
+    credentials: serviceAccount, // Path to your service account key file
+    scopes: [
+        'https://www.googleapis.com/auth/calendar',
+        'https://www.googleapis.com/auth/calendar.events',
+    ],
+});
+
+// Initialize Google Calendar API client
+const generateGoogleMeetLink = async ({ summary, startDateTime, endDateTime }) => {
+    const calendar = google.calendar({ version: 'v3', auth });
+
+    try {
+        const start = new Date(startDateTime);
+        const end = new Date(endDateTime);
+
+        // Validate input dates
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            throw new Error('Invalid start or end time format.');
+        }
+
+        // Event object
+        const event = {
+            summary,
+            start: {
+                dateTime: start.toISOString(),
+                timeZone: 'Asia/Kolkata',
+            },
+            end: {
+                dateTime: end.toISOString(),
+                timeZone: 'Asia/Kolkata',
+            },
+            conferenceData: {
+                createRequest: {
+                    requestId: uuidv4(),  // Unique request ID
+                    conferenceSolutionKey: {
+                        type: 'hangoutsMeet',  // Corrected conference type
+                    },
+                },
+            },
+        };
+
+        // Insert the event into the calendar
+        const response = await calendar.events.insert({
+            calendarId: 'primary',  // Use a specific calendar ID if needed
+            resource: event,
+            conferenceDataVersion: 1,
+        });
+
+        const googleMeetLink = response.data.hangoutLink;
+        const googleEventId = response.data.id;
+
+        console.log('Google Meet Link:', googleMeetLink);
+        console.log('Event ID:', googleEventId);
+
+        return {
+            meetLink: googleMeetLink,
+            eventId: googleEventId,
+        };
+    } catch (error) {
+        console.error('Error generating Google Meet link:', error.message);
+        throw new Error('Failed to generate Google Meet link.');
+    }
+};
+
 module.exports = {
     saveBase64File,
     generateToken,
-    getDateRange
+    getDateRange,
+    generateGoogleMeetLink
 };

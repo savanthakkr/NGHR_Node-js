@@ -42,6 +42,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "user_id",
                 onDelete: 'cascade'
             });
+
+            users.hasOne(models.meeting_schedules, {
+                foreignKey: "user_id",
+                onDelete: 'cascade'
+            });
         }
     }
     users.init({

@@ -125,10 +125,12 @@ const getUserApplicationList = async (req, res) => {
         const itemsPerPage = bodyData?.itemsPerPage || 5;
         const offset = (currentPage - 1) * itemsPerPage;
 
+        const whereClause = userInfo?.type === 'User'
+            ? { user_id: userInfo?.id }
+            : { company_id: userInfo?.id };
+
         const applyJobList = await userApplyJobsSchema.findAll({
-            where: {
-                company_id: userInfo?.id
-            },
+            where: whereClause,
             include: [
                 { model: companiesSchema },
                 {

@@ -5,7 +5,7 @@ const {
     post_job_vaccancies: postJobSchema,
     company_images: companyImagesSchema
 } = require("../models/index.js");
-const { saveBase64File, generateToken, getDateRange } = require("../utils/helper.js");
+const { saveBase64File, generateToken, getDateRange, generateGoogleMeetLink } = require("../utils/helper.js");
 const Sequelize = require('sequelize');
 const { Op } = require('sequelize');
 const fs = require('fs');
@@ -252,7 +252,7 @@ const getCompanyList = async (req, res) => {
                         [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
                     };
                 } else if (filter?.id === 'job_type') {
-                    jobQuery['job_type'] = {
+                    jobQuery['category'] = {
                         [Sequelize.Op.like]: `%${filter?.value.trim()}%`,
                     };
                 } else if (filter?.id === 'base_salary_range') {
@@ -276,7 +276,7 @@ const getCompanyList = async (req, res) => {
                             [Sequelize.Op.like]: `%${f?.value.trim()}%`
                         }));
                     if (categories.length > 0) {
-                        jobQuery['category'] = {
+                        jobQuery['job_type'] = {
                             [Sequelize.Op.or]: categories
                         };
                     }
@@ -356,11 +356,46 @@ const getCompanyById = async (req, res) => {
     }
 }
 
+// schedule google meet
+const scheduleGoogleMeet = async (req, res) => {
+    try {
+        const { summary, startDateTime, endDateTime } = req.body;
+        const userInfo = req?.userInfo;
+
+        const company = await companiesSchema.findOne({
+            where: {
+                id: userInfo?.id,
+            },
+        });
+
+        if (!company) {
+            return res.status(404).json({
+                error: true,
+                message: 'Company not found!'
+            });
+        }
+
+        const response = await generateGoogleMeetLink({ summary, startDateTime, endDateTime })
+        return res.status(200).json({
+            error: false,
+            message: 'Company data fetched successfully!',
+            data: response,
+        });
+    } catch (error) {
+        console.log('Error while fetching company by ID:', error);
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to fetch company by ID!'
+        });
+    }
+}
+
 module.exports = {
     signup,
     signIn,
     getCompanyUserByAuthToken,
     updateUserProfile,
     getCompanyList,
-    getCompanyById
+    getCompanyById,
+    scheduleGoogleMeet
 }

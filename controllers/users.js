@@ -188,26 +188,86 @@ const addUserEducation = async (req, res) => {
 };
 
 // add user experience
+// const addUserExperience = async (req, res) => {
+//     try {
+//         const bodyData = req?.body;
+
+//         const existingExperience = await userExperienceSchema.findOne({
+//             where: { user_id: bodyData?.user_id }
+//         });
+
+//         if (existingExperience) {
+//             return res.status(400).json({ error: true, message: 'User experience already exists!' });
+//         }
+
+//         await userExperienceSchema.create(bodyData);
+
+//         res.status(200).json({ error: false, message: 'Experience added successfully!' });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ error: true, message: 'Failed to add experience!' });
+//     }
+// };
 const addUserExperience = async (req, res) => {
     try {
-        const bodyData = req?.body;
+        const bodyData = req.body;
+        const userInfo = req?.userInfo;
 
-        const existingExperience = await userExperienceSchema.findOne({
-            where: { user_id: bodyData?.user_id }
-        });
-
-        if (existingExperience) {
-            return res.status(400).json({ error: true, message: 'User experience already exists!' });
+        if (!Array.isArray(bodyData)) {
+            return res.status(400).json({ error: true, message: 'Invalid data format. Expected an array of bodyData.' });
         }
 
-        await userExperienceSchema.create(bodyData);
+        for (const experience of bodyData) {
+            await userExperienceSchema.create({
+                ...experience,
+                user_id: userInfo?.id,
+            });
+        }
 
         res.status(200).json({ error: false, message: 'Experience added successfully!' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: true, message: 'Failed to add experience!' });
+        res.status(500).json({ error: true, message: 'Failed to add experiences!' });
     }
 };
+
+// update user experience
+const updateUserExperience = async (req, res) => {
+    try {
+        const bodyData = req.body[0];
+        const userInfo = req.userInfo;
+
+        if (!bodyData) {
+            return res.status(400).json({ error: true, message: 'Invalid experience data!' });
+        }
+
+        const findOne = await userExperienceSchema.findOne({
+            where: {
+                id: bodyData?.id
+            }
+        });
+
+        if (!findOne) {
+            return res.status(404).json({ error: true, message: 'Experience not found!' });
+        }
+
+        await userExperienceSchema.update(
+            { ...bodyData },
+            {
+                where: {
+                    id: bodyData.id,
+                    user_id: userInfo.id,
+                },
+            }
+        );
+
+        res.status(200).json({ error: false, message: 'Experience updated successfully!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to update experience!' });
+    }
+};
+
 
 // get user by id
 const getUserByAuthToken = async (req, res) => {
@@ -249,8 +309,11 @@ const updateUser = async (req, res) => {
             return;
         }
 
-        const profileImage = await saveBase64File(bodyData?.profile_image, 'uploads');
-        bodyData.profile_image = profileImage;
+        if (bodyData?.profile_image && bodyData?.profile_image.match(/^data:(.+);base64,(.+)$/)) {
+            const profileImage = await saveBase64File(bodyData?.profile_image, 'uploads');
+            bodyData.profile_image = profileImage;
+        }
+
         await userSchema.update(bodyData, {
             where: {
                 id: bodyData?.id,
@@ -409,7 +472,7 @@ const getUserJob = async (req, res) => {
                             [Sequelize.Op.like]: `%${f?.value.trim()}%`
                         }));
                     if (categories.length > 0) {
-                        filters['category'] = {
+                        filters['job_type'] = {
                             [Sequelize.Op.or]: categories
                         };
                     }
@@ -577,6 +640,7 @@ const getUserResume = async (req, res) => {
         const resumes = await userResumesSchema.findAll({
             where: { user_id: userInfo?.id },
             attributes: { exclude: ["createdAt", "updatedAt"] },
+            order: [['createdAt', 'DESC']]
         });
 
         if (!resumes || resumes.length === 0) {
@@ -721,6 +785,61 @@ const getUserById = async (req, res) => {
     }
 }
 
+// user sign out
+const signOut = async (req, res) => {
+    try {
+        const { userType } = req.body;
+        console.log('userType: ', userType);
+        const userInfo = req?.userInfo;
+        console.log('userInfo: ', userInfo);
+
+        if (!userType) {
+            return res.status(400).json({ message: 'Invalid request parameters.' });
+        }
+
+        if (userType === 'Company') {
+            const findOne = await companiesSchema.findOne({
+                where: {
+                    id: userInfo?.id
+                }
+            });
+
+            if (!findOne) {
+                return res.status(401).json({ message: 'User is not available in our system.' });
+            }
+
+            await userTokenSchema.destroy({
+                where: {
+                    company_user_id: userInfo?.id
+                },
+            });
+
+            return res.status(200).json({ message: 'User log out successfully.' });
+        } else if (userType === 'User') {
+            const findOne = await userSchema.findOne({
+                where: {
+                    id: userInfo?.id
+                }
+            });
+
+            if (!findOne) {
+                return res.status(401).json({ message: 'User is not available in our system.' });
+            }
+
+            await userTokenSchema.destroy({
+                where: {
+                    user_id: userInfo?.id
+                },
+            });
+
+            return res.status(200).json({ message: 'User log out successfully.' });
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+        return res.status(500).json({ message: 'Error during log out.' });
+    }
+}
+
 module.exports = {
     userRegister,
     signIn,
@@ -740,5 +859,7 @@ module.exports = {
     getUserResume,
     applyJob,
     getUserListByJobId,
-    getUserById
+    getUserById,
+    signOut,
+    updateUserExperience
 }
