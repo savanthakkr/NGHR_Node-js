@@ -188,29 +188,10 @@ const addUserEducation = async (req, res) => {
 };
 
 // add user experience
-// const addUserExperience = async (req, res) => {
-//     try {
-//         const bodyData = req?.body;
-
-//         const existingExperience = await userExperienceSchema.findOne({
-//             where: { user_id: bodyData?.user_id }
-//         });
-
-//         if (existingExperience) {
-//             return res.status(400).json({ error: true, message: 'User experience already exists!' });
-//         }
-
-//         await userExperienceSchema.create(bodyData);
-
-//         res.status(200).json({ error: false, message: 'Experience added successfully!' });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ error: true, message: 'Failed to add experience!' });
-//     }
-// };
 const addUserExperience = async (req, res) => {
     try {
         const bodyData = req.body;
+
         const userInfo = req?.userInfo;
 
         if (!Array.isArray(bodyData)) {
@@ -220,7 +201,7 @@ const addUserExperience = async (req, res) => {
         for (const experience of bodyData) {
             await userExperienceSchema.create({
                 ...experience,
-                user_id: userInfo?.id,
+                user_id: userInfo?.id || experience?.user_id,
             });
         }
 
@@ -267,7 +248,6 @@ const updateUserExperience = async (req, res) => {
         res.status(500).json({ error: true, message: 'Failed to update experience!' });
     }
 };
-
 
 // get user by id
 const getUserByAuthToken = async (req, res) => {

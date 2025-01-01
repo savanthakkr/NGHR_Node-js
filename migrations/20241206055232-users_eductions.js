@@ -100,6 +100,14 @@ module.exports = {
         type: Sequelize.STRING(100),
         allowNull: true
       },
+      plan_id: {
+        type: Sequelize.STRING(50),
+        allowNull: true
+      },
+      plan_exp_date: {
+        type: Sequelize.STRING(100),
+        allowNull: true
+      },
       status: {
         allowNull: false,
         type: Sequelize.TINYINT(1),
