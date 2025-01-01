@@ -9,6 +9,14 @@ const { userRegister, signIn, addUserDocument,
 } = require("../controllers/users.js");
 const { userAuth } = require("../middleware/authentication.js");
 
+const conditionalAuth = (req, res, next) => {
+    if (req.body.skipAuth === true) {
+        return next();
+    } else {
+        return userAuth(req, res, next);
+    }
+};
+
 // sign in
 router.route('/signin').post(signIn);
 
@@ -22,7 +30,8 @@ router.route('/upload_document').post(addUserDocument);
 router.route('/user_eduction').post(addUserEducation);
 
 // add user experience
-router.route('/user_experience').post(userAuth, addUserExperience);
+// router.route('/user_experience').post(userAuth, addUserExperience);
+router.route('/user_experience').post(conditionalAuth, addUserExperience);
 
 // update user experience
 router.route('/update_experience').put(userAuth, updateUserExperience);

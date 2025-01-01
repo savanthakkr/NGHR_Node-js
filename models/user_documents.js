@@ -47,14 +47,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(350),
             allowNull: true
         },
-        plan_id: {
-            type: DataTypes.STRING(50),
-            allowNull: true
-        },
-        plan_exp_date: {
-            type: DataTypes.STRING(100),
-            allowNull: true
-        },
         status: {
             allowNull: false,
             type: DataTypes.TINYINT(1),
