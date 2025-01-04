@@ -47,6 +47,30 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "user_id",
                 onDelete: 'cascade'
             });
+
+            users.hasMany(models.company_follows, {
+                foreignKey: "receiver_id",
+                onDelete: 'cascade',
+                as: 'companyFollowsAsReceiver'
+            });
+
+            users.hasMany(models.user_follows, {
+                foreignKey: "sender_id",
+                onDelete: 'cascade',
+                as: 'userFollowsAsSender'
+            });
+
+            users.hasMany(models.user_follows, {
+                foreignKey: "receiver_id",
+                onDelete: 'cascade',
+                as: 'userFollowsAsReceiver'
+            });
+
+            users.hasMany(models.consultant_follows, {
+                foreignKey: "receiver_id",
+                onDelete: 'cascade',
+                as: 'consultantsFollowsAsReceiver'
+            });
         }
     }
     users.init({

@@ -5,7 +5,8 @@ const { userRegister, signIn, addUserDocument,
     addUserEducation, addUserExperience, getUserByAuthToken, updateUser,
     updateUserPreferences, getUserPreferences, getUserExperience, getUserJob,
     userSavedJob, getUserSavedJob, addUserResume, getUserResume, applyJob,
-    getUserListByJobId, getUserById, signOut, updateUserExperience
+    getUserListByJobId, getUserById, signOut, updateUserExperience,
+    sendConnectionRequest, acceptConnectionRequest, getConnections
 } = require("../controllers/users.js");
 const { userAuth } = require("../middleware/authentication.js");
 
@@ -78,5 +79,14 @@ router.route('/:id').get(getUserById);
 
 // user sign out 
 router.route('/log-out').post(userAuth, signOut);
+
+// send a connection request
+router.route('/connections/request').post(userAuth, sendConnectionRequest);
+
+// accept a request
+router.route('/connections/:id/accept').put(userAuth, acceptConnectionRequest);
+
+// get all connections
+router.route('/connections/all').get(userAuth, getConnections);
 
 module.exports = router;

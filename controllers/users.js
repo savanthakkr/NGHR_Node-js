@@ -9,10 +9,12 @@ const {
     post_job_vaccancies: postJobSchema,
     user_saved_jobs: userSavedJobsSchema,
     user_resumes: userResumesSchema,
-    user_apply_jobs: userApplyJobsSchema
+    user_apply_jobs: userApplyJobsSchema,
+    user_follows: userFollowsSchema
 } = require("../models/index")
 const { saveBase64File, generateToken, getDateRange } = require("../utils/helper");
 const Sequelize = require('sequelize');
+const { Op } = require('sequelize');
 
 // Get user token info
 const getUserTokenInfo = async (access_token) => {
@@ -820,6 +822,107 @@ const signOut = async (req, res) => {
     }
 }
 
+// send a connection request
+const sendConnectionRequest = async (req, res) => {
+    try {
+        const { recipientId } = req.body;
+
+        if (!recipientId) {
+            return res.status(400).json({ message: 'Recipient ID is required' });
+        }
+
+        if (recipientId === req.userInfo.id) {
+            return res.status(400).json({ message: 'You cannot send a connection request to yourself' });
+        }
+
+        const existingRequest = await userFollowsSchema.findOne({
+            where: {
+                sender_id: req?.userInfo?.id,
+                receiver_id: recipientId,
+            },
+        });
+
+        if (existingRequest) {
+            return res.status(400).json({ message: 'Connection request already sent' });
+        }
+
+        // Create a new connection request
+        const connection = await userFollowsSchema.create({
+            sender_id: req?.userInfo?.id,
+            receiver_id: recipientId,
+            status: 0,
+        });
+
+        res.status(201).json({ message: 'Connection request sent', connection });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// accept a request
+const acceptConnectionRequest = async (req, res) => {
+    try {
+        const { id } = req?.params;
+
+        const connection = await userFollowsSchema.findOne({
+            where: {
+                id: id,
+                sender_id: req?.userInfo?.id,
+                status: 0,
+            },
+        });
+
+        if (!connection) {
+            return res.status(404).json({ message: 'Connection request not found or already accepted' });
+        }
+
+        await userFollowsSchema.update({ status: 1 }, {
+            where: {
+                id: id
+            }
+        });
+
+        res.status(200).json({ message: 'Connection request accepted' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// get all connections
+const getConnections = async (req, res) => {
+    try {
+
+        const connections = await userFollowsSchema.findAll({
+            where: {
+                status: 1,
+                [Op.or]: [
+                    { sender_id: req?.userInfo?.id },
+                    { receiver_id: req?.userInfo?.id },
+                ],
+            },
+            include: [
+                {
+                    model: userSchema,
+                    as: 'userFollowsAsSender',
+                    attributes: ['id', 'name', 'email']
+                },
+                {
+                    model: userSchema,
+                    as: 'userFollowsAsReceiver',
+                    attributes: ['id', 'name', 'email']
+                },
+            ],
+        });
+
+        res.status(200).json({ message: 'Connections retrieved', connections });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
 module.exports = {
     userRegister,
     signIn,
@@ -841,5 +944,8 @@ module.exports = {
     getUserListByJobId,
     getUserById,
     signOut,
-    updateUserExperience
+    updateUserExperience,
+    sendConnectionRequest,
+    acceptConnectionRequest,
+    getConnections
 }
