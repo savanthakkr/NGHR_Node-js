@@ -28,10 +28,14 @@ module.exports = (sequelize, DataTypes) => {
                 onDelete: 'cascade'
             });
 
-            companies.hasMany(models.company_follows, {
-                foreignKey: "sender_id",
-                onDelete: 'cascade',
-                as: 'companyFollowsAsSender'
+            companies.hasMany(models.connections, {
+                foreignKey: 'sender_company_id',
+                as: 'senderCompany',
+            });
+
+            companies.hasMany(models.connections, {
+                foreignKey: 'receiver_company_id',
+                as: 'receiverCompany',
             });
         }
     }
@@ -53,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         email: {
             type: DataTypes.STRING(255),
             allowNull: true,
+        },
+        type: {
+            allowNull: false,
+            defaultValue: 'Company',
+            type: DataTypes.STRING(255),
         },
         aadhar_front: {
             type: DataTypes.STRING(255),

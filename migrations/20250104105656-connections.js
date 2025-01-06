@@ -8,22 +8,42 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable('consultant_follows', {
+    await queryInterface.createTable('connections', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.BIGINT(20).UNSIGNED
       },
-      sender_id: {
-        allowNull: false,
-        type: Sequelize.BIGINT(20).UNSIGNED,
-        references: { model: "consultants", key: "id" },
-      },
-      receiver_id: {
+      sender_user_id: {
         allowNull: true,
         type: Sequelize.BIGINT(20).UNSIGNED,
-        references: { model: "users", key: "id" },
+        references: { model: "users", key: "id" }
+      },
+      receiver_user_id: {
+        allowNull: true,
+        type: Sequelize.BIGINT(20).UNSIGNED,
+        references: { model: "users", key: "id" }
+      },
+      sender_company_id: {
+        allowNull: true,
+        type: Sequelize.BIGINT(20).UNSIGNED,
+        references: { model: "companies", key: "id" }
+      },
+      receiver_company_id: {
+        allowNull: true,
+        type: Sequelize.BIGINT(20).UNSIGNED,
+        references: { model: "companies", key: "id" }
+      },
+      from: {
+        allowNull: false,
+        type: Sequelize.ENUM('user', 'company'),
+        comment: 'Indicates the type of sender (user or company)'
+      },
+      to: {
+        allowNull: false,
+        type: Sequelize.ENUM('user', 'company'),
+        comment: 'Indicates the type of receiver (user or company)'
       },
       status: {
         allowNull: false,
@@ -49,6 +69,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('consultant_follows');
+    await queryInterface.dropTable('connections');
   }
 };

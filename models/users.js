@@ -48,28 +48,14 @@ module.exports = (sequelize, DataTypes) => {
                 onDelete: 'cascade'
             });
 
-            users.hasMany(models.company_follows, {
-                foreignKey: "receiver_id",
-                onDelete: 'cascade',
-                as: 'companyFollowsAsReceiver'
+            users.hasMany(models.connections, {
+                foreignKey: 'sender_user_id',
+                as: 'senderUser',
             });
 
-            users.hasMany(models.user_follows, {
-                foreignKey: "sender_id",
-                onDelete: 'cascade',
-                as: 'userFollowsAsSender'
-            });
-
-            users.hasMany(models.user_follows, {
-                foreignKey: "receiver_id",
-                onDelete: 'cascade',
-                as: 'userFollowsAsReceiver'
-            });
-
-            users.hasMany(models.consultant_follows, {
-                foreignKey: "receiver_id",
-                onDelete: 'cascade',
-                as: 'consultantsFollowsAsReceiver'
+            users.hasMany(models.connections, {
+                foreignKey: 'receiver_user_id',
+                as: 'receiverUser',
             });
         }
     }

@@ -37,6 +37,7 @@ const signup = async (req, res) => {
 
         const dataToSave = {
             ...bodyData,
+            type: "Company",
             company_name: bodyData?.company_name?.value,
             company_type: bodyData?.company_type?.value,
             company_sector: bodyData?.company_sector?.value,
@@ -392,107 +393,6 @@ const scheduleGoogleMeet = async (req, res) => {
     }
 }
 
-// send a connection request
-const sendConnectionRequest = async (req, res) => {
-    try {
-        const { recipientId } = req.body;
-
-        if (!recipientId) {
-            return res.status(400).json({ message: 'Recipient ID is required' });
-        }
-
-        if (recipientId === req.userInfo.id) {
-            return res.status(400).json({ message: 'You cannot send a connection request to yourself' });
-        }
-
-        const existingRequest = await companyFollowsSchema.findOne({
-            where: {
-                sender_id: req?.userInfo?.id,
-                receiver_id: recipientId,
-            },
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({ message: 'Connection request already sent' });
-        }
-
-        // Create a new connection request
-        const connection = await companyFollowsSchema.create({
-            sender_id: req?.userInfo?.id,
-            receiver_id: recipientId,
-            status: 0,
-        });
-
-        res.status(201).json({ message: 'Connection request sent', connection });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// accept a request
-const acceptConnectionRequest = async (req, res) => {
-    try {
-        const { id } = req?.params;
-
-        const connection = await companyFollowsSchema.findOne({
-            where: {
-                id: id,
-                sender_id: req?.userInfo?.id,
-                status: 0,
-            },
-        });
-
-        if (!connection) {
-            return res.status(404).json({ message: 'Connection request not found or already accepted' });
-        }
-
-        await companyFollowsSchema.update({ status: 1 }, {
-            where: {
-                id: id
-            }
-        });
-
-        res.status(200).json({ message: 'Connection request accepted' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// get all connections
-const getConnections = async (req, res) => {
-    try {
-
-        const connections = await companyFollowsSchema.findAll({
-            where: {
-                status: 1,
-                [Op.or]: [
-                    { sender_id: req?.userInfo?.id },
-                    { receiver_id: req?.userInfo?.id },
-                ],
-            },
-            include: [
-                {
-                    model: companiesSchema,
-                    as: 'companyFollowsAsSender',
-                    attributes: ['id', 'company_name', 'email']
-                },
-                {
-                    model: userSchema,
-                    as: 'companyFollowsAsReceiver',
-                    attributes: ['id', 'name', 'email']
-                },
-            ],
-        });
-
-        res.status(200).json({ message: 'Connections retrieved', connections });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
 module.exports = {
     signup,
     signIn,
@@ -500,8 +400,5 @@ module.exports = {
     updateUserProfile,
     getCompanyList,
     getCompanyById,
-    scheduleGoogleMeet,
-    sendConnectionRequest,
-    acceptConnectionRequest,
-    getConnections
+    scheduleGoogleMeet
 }

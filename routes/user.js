@@ -6,7 +6,7 @@ const { userRegister, signIn, addUserDocument,
     updateUserPreferences, getUserPreferences, getUserExperience, getUserJob,
     userSavedJob, getUserSavedJob, addUserResume, getUserResume, applyJob,
     getUserListByJobId, getUserById, signOut, updateUserExperience,
-    sendConnectionRequest, acceptConnectionRequest, getConnections
+    getUserEduction
 } = require("../controllers/users.js");
 const { userAuth } = require("../middleware/authentication.js");
 
@@ -50,7 +50,10 @@ router.route('/update/preferences').put(userAuth, updateUserPreferences);
 router.route('/get/preferences').get(userAuth, getUserPreferences);
 
 // user experience by id
-router.route('/experience').get(userAuth, getUserExperience);
+router.route('/experience/:id').get(userAuth, getUserExperience);
+
+// user eduction by id
+router.route('/eduction/:id').get(userAuth, getUserEduction);
 
 // get user job
 // router.route('/list').post(userAuth, getUserJob);
@@ -66,7 +69,7 @@ router.route('/save/job').get(userAuth, getUserSavedJob);
 router.route('/resume').post(userAuth, addUserResume);
 
 // get user resume
-router.route('/resume').get(userAuth, getUserResume);
+router.route('/resume/:id').get(userAuth, getUserResume);
 
 // apply job
 router.route('/apply_job').post(userAuth, applyJob);
@@ -80,13 +83,5 @@ router.route('/:id').get(getUserById);
 // user sign out 
 router.route('/log-out').post(userAuth, signOut);
 
-// send a connection request
-router.route('/connections/request').post(userAuth, sendConnectionRequest);
-
-// accept a request
-router.route('/connections/:id/accept').put(userAuth, acceptConnectionRequest);
-
-// get all connections
-router.route('/connections/all').get(userAuth, getConnections);
 
 module.exports = router;

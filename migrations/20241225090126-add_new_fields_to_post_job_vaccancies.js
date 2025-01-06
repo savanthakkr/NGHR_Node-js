@@ -9,5 +9,11 @@ module.exports = {
       comment: "0 => not active, 1 => active",
       default: 1
     });
+    await queryInterface.addColumn("companies", "type", {
+      allowNull: false,
+      defaultValue: 'Company',
+      type: Sequelize.STRING(255),
+      after: 'email'
+    });
   },
 };

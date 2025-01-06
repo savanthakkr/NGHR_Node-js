@@ -405,21 +405,18 @@ const getUserPreferences = async (req, res) => {
 // get user experience
 const getUserExperience = async (req, res) => {
     try {
-        const userId = req.userInfo.id;
 
         const experiences = await userExperienceSchema.findAll({
-            where: { user_id: userId }
+            where: { user_id: req?.params?.id, status: 1 }
         });
 
         if (!experiences || experiences.length === 0) {
             return res.status(404).json({
-                status: "fail",
                 message: "No experience data found for the user."
             });
         }
 
         res.status(200).json({
-            status: "success",
             data: {
                 experiences
             }
@@ -433,6 +430,32 @@ const getUserExperience = async (req, res) => {
     }
 };
 
+// get user eduction
+const getUserEduction = async (req, res) => {
+    try {
+
+        const data = await userEductionsSchema.findAll({
+            where: { user_id: req?.params?.id, status: 1 }
+        });
+
+        if (!data || data?.length === 0) {
+            return res.status(404).json({
+                message: "No eduction data found for the user."
+            });
+        }
+
+        res.status(200).json({
+            data: data
+
+        });
+    } catch (error) {
+        console.error("Error fetching user experience:", error);
+        res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching experience data."
+        });
+    }
+};
 // get user job
 const getUserJob = async (req, res) => {
     try {
@@ -620,8 +643,8 @@ const getUserResume = async (req, res) => {
         }
 
         const resumes = await userResumesSchema.findAll({
-            where: { user_id: userInfo?.id },
-            attributes: { exclude: ["createdAt", "updatedAt"] },
+            where: { user_id: req?.params?.id },
+            attributes: { exclude: ["updatedAt"] },
             order: [['createdAt', 'DESC']]
         });
 
@@ -771,9 +794,7 @@ const getUserById = async (req, res) => {
 const signOut = async (req, res) => {
     try {
         const { userType } = req.body;
-        console.log('userType: ', userType);
         const userInfo = req?.userInfo;
-        console.log('userInfo: ', userInfo);
 
         if (!userType) {
             return res.status(400).json({ message: 'Invalid request parameters.' });
@@ -822,107 +843,6 @@ const signOut = async (req, res) => {
     }
 }
 
-// send a connection request
-const sendConnectionRequest = async (req, res) => {
-    try {
-        const { recipientId } = req.body;
-
-        if (!recipientId) {
-            return res.status(400).json({ message: 'Recipient ID is required' });
-        }
-
-        if (recipientId === req.userInfo.id) {
-            return res.status(400).json({ message: 'You cannot send a connection request to yourself' });
-        }
-
-        const existingRequest = await userFollowsSchema.findOne({
-            where: {
-                sender_id: req?.userInfo?.id,
-                receiver_id: recipientId,
-            },
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({ message: 'Connection request already sent' });
-        }
-
-        // Create a new connection request
-        const connection = await userFollowsSchema.create({
-            sender_id: req?.userInfo?.id,
-            receiver_id: recipientId,
-            status: 0,
-        });
-
-        res.status(201).json({ message: 'Connection request sent', connection });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// accept a request
-const acceptConnectionRequest = async (req, res) => {
-    try {
-        const { id } = req?.params;
-
-        const connection = await userFollowsSchema.findOne({
-            where: {
-                id: id,
-                sender_id: req?.userInfo?.id,
-                status: 0,
-            },
-        });
-
-        if (!connection) {
-            return res.status(404).json({ message: 'Connection request not found or already accepted' });
-        }
-
-        await userFollowsSchema.update({ status: 1 }, {
-            where: {
-                id: id
-            }
-        });
-
-        res.status(200).json({ message: 'Connection request accepted' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
-// get all connections
-const getConnections = async (req, res) => {
-    try {
-
-        const connections = await userFollowsSchema.findAll({
-            where: {
-                status: 1,
-                [Op.or]: [
-                    { sender_id: req?.userInfo?.id },
-                    { receiver_id: req?.userInfo?.id },
-                ],
-            },
-            include: [
-                {
-                    model: userSchema,
-                    as: 'userFollowsAsSender',
-                    attributes: ['id', 'name', 'email']
-                },
-                {
-                    model: userSchema,
-                    as: 'userFollowsAsReceiver',
-                    attributes: ['id', 'name', 'email']
-                },
-            ],
-        });
-
-        res.status(200).json({ message: 'Connections retrieved', connections });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error', error: error.message });
-    }
-};
-
 module.exports = {
     userRegister,
     signIn,
@@ -945,7 +865,5 @@ module.exports = {
     getUserById,
     signOut,
     updateUserExperience,
-    sendConnectionRequest,
-    acceptConnectionRequest,
-    getConnections
+    getUserEduction
 }

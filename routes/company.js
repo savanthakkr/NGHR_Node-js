@@ -30,12 +30,4 @@ router.route('/:id').get(userAuth, getCompanyById);
 // schedule google meet
 router.route('/generate-link').post(userAuth, scheduleGoogleMeet);
 
-// send a connection request
-router.route('/connections/request').post(userAuth, sendConnectionRequest);
-
-// accept a request
-router.route('/connections/:id/accept').put(userAuth, acceptConnectionRequest);
-
-// get all connections
-router.route('/connections/all').get(userAuth, getConnections);
 module.exports = router;
