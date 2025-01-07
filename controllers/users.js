@@ -9,10 +9,12 @@ const {
     post_job_vaccancies: postJobSchema,
     user_saved_jobs: userSavedJobsSchema,
     user_resumes: userResumesSchema,
-    user_apply_jobs: userApplyJobsSchema
+    user_apply_jobs: userApplyJobsSchema,
+    connections: connectionsSchema
 } = require("../models/index")
 const { saveBase64File, generateToken, getDateRange } = require("../utils/helper");
 const Sequelize = require('sequelize');
+const { Op } = require('sequelize');
 
 // Get user token info
 const getUserTokenInfo = async (access_token) => {
@@ -403,24 +405,48 @@ const getUserPreferences = async (req, res) => {
 // get user experience
 const getUserExperience = async (req, res) => {
     try {
-        const userId = req.userInfo.id;
 
         const experiences = await userExperienceSchema.findAll({
-            where: { user_id: userId }
+            where: { user_id: req?.params?.id, status: 1 }
         });
 
         if (!experiences || experiences.length === 0) {
             return res.status(404).json({
-                status: "fail",
                 message: "No experience data found for the user."
             });
         }
 
         res.status(200).json({
-            status: "success",
             data: {
                 experiences
             }
+        });
+    } catch (error) {
+        console.error("Error fetching user experience:", error);
+        res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching experience data."
+        });
+    }
+};
+
+// get user eduction
+const getUserEduction = async (req, res) => {
+    try {
+
+        const data = await userEductionsSchema.findAll({
+            where: { user_id: req?.params?.id, status: 1 }
+        });
+
+        if (!data || data?.length === 0) {
+            return res.status(404).json({
+                message: "No eduction data found for the user."
+            });
+        }
+
+        res.status(200).json({
+            data: data
+
         });
     } catch (error) {
         console.error("Error fetching user experience:", error);
@@ -479,7 +505,6 @@ const getUserJob = async (req, res) => {
             ],
             limit: itemsPerPage,
             offset: offset,
-            logging: true
         });
 
 
@@ -618,8 +643,8 @@ const getUserResume = async (req, res) => {
         }
 
         const resumes = await userResumesSchema.findAll({
-            where: { user_id: userInfo?.id },
-            attributes: { exclude: ["createdAt", "updatedAt"] },
+            where: { user_id: req?.params?.id },
+            attributes: { exclude: ["updatedAt"] },
             order: [['createdAt', 'DESC']]
         });
 
@@ -769,9 +794,7 @@ const getUserById = async (req, res) => {
 const signOut = async (req, res) => {
     try {
         const { userType } = req.body;
-        console.log('userType: ', userType);
         const userInfo = req?.userInfo;
-        console.log('userInfo: ', userInfo);
 
         if (!userType) {
             return res.status(400).json({ message: 'Invalid request parameters.' });
@@ -841,5 +864,6 @@ module.exports = {
     getUserListByJobId,
     getUserById,
     signOut,
-    updateUserExperience
+    updateUserExperience,
+    getUserEduction
 }

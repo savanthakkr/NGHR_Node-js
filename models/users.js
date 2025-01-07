@@ -47,6 +47,16 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "user_id",
                 onDelete: 'cascade'
             });
+
+            users.hasMany(models.connections, {
+                foreignKey: 'sender_user_id',
+                as: 'senderUser',
+            });
+
+            users.hasMany(models.connections, {
+                foreignKey: 'receiver_user_id',
+                as: 'receiverUser',
+            });
         }
     }
     users.init({

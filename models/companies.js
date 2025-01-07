@@ -27,6 +27,16 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "company_id",
                 onDelete: 'cascade'
             });
+
+            companies.hasMany(models.connections, {
+                foreignKey: 'sender_company_id',
+                as: 'senderCompany',
+            });
+
+            companies.hasMany(models.connections, {
+                foreignKey: 'receiver_company_id',
+                as: 'receiverCompany',
+            });
         }
     }
     companies.init({
@@ -47,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         email: {
             type: DataTypes.STRING(255),
             allowNull: true,
+        },
+        type: {
+            allowNull: false,
+            defaultValue: 'Company',
+            type: DataTypes.STRING(255),
         },
         aadhar_front: {
             type: DataTypes.STRING(255),

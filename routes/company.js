@@ -5,7 +5,8 @@ const { userAuth } = require("../middleware/authentication.js")
 
 const { signup, signIn, getCompanyUserByAuthToken,
     updateUserProfile, getCompanyList, getCompanyById,
-    scheduleGoogleMeet
+    scheduleGoogleMeet, sendConnectionRequest, acceptConnectionRequest,
+    getConnections
 } = require('../controllers/companies.js');
 
 // sign up

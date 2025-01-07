@@ -3,7 +3,9 @@ const {
     companies: companiesSchema,
     user_tokens: userTokenSchema,
     post_job_vaccancies: postJobSchema,
-    company_images: companyImagesSchema
+    company_images: companyImagesSchema,
+    company_follows: companyFollowsSchema,
+    users: userSchema
 } = require("../models/index.js");
 const { saveBase64File, generateToken, getDateRange, generateGoogleMeetLink } = require("../utils/helper.js");
 const Sequelize = require('sequelize');
@@ -35,6 +37,7 @@ const signup = async (req, res) => {
 
         const dataToSave = {
             ...bodyData,
+            type: "Company",
             company_name: bodyData?.company_name?.value,
             company_type: bodyData?.company_type?.value,
             company_sector: bodyData?.company_sector?.value,

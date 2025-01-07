@@ -5,17 +5,22 @@ const { userRegister, signIn, addUserDocument,
     addUserEducation, addUserExperience, getUserByAuthToken, updateUser,
     updateUserPreferences, getUserPreferences, getUserExperience, getUserJob,
     userSavedJob, getUserSavedJob, addUserResume, getUserResume, applyJob,
-    getUserListByJobId, getUserById, signOut, updateUserExperience
+    getUserListByJobId, getUserById, signOut, updateUserExperience,
+    getUserEduction
 } = require("../controllers/users.js");
 const { userAuth } = require("../middleware/authentication.js");
 
 const conditionalAuth = (req, res, next) => {
-    if (req.body.skipAuth === true) {
+    if (req.body.some(experience => experience?.skipAuth === true)) {
         return next();
     } else {
         return userAuth(req, res, next);
     }
 };
+
+// Route definition
+router.route('/user_experience').post(conditionalAuth, addUserExperience);
+
 
 // sign in
 router.route('/signin').post(signIn);
@@ -49,7 +54,10 @@ router.route('/update/preferences').put(userAuth, updateUserPreferences);
 router.route('/get/preferences').get(userAuth, getUserPreferences);
 
 // user experience by id
-router.route('/experience').get(userAuth, getUserExperience);
+router.route('/experience/:id').get(userAuth, getUserExperience);
+
+// user eduction by id
+router.route('/eduction/:id').get(userAuth, getUserEduction);
 
 // get user job
 // router.route('/list').post(userAuth, getUserJob);
@@ -65,7 +73,7 @@ router.route('/save/job').get(userAuth, getUserSavedJob);
 router.route('/resume').post(userAuth, addUserResume);
 
 // get user resume
-router.route('/resume').get(userAuth, getUserResume);
+router.route('/resume/:id').get(userAuth, getUserResume);
 
 // apply job
 router.route('/apply_job').post(userAuth, applyJob);
@@ -78,5 +86,6 @@ router.route('/:id').get(getUserById);
 
 // user sign out 
 router.route('/log-out').post(userAuth, signOut);
+
 
 module.exports = router;
