@@ -10,7 +10,7 @@ const {
     user_saved_jobs: userSavedJobsSchema,
     user_resumes: userResumesSchema,
     user_apply_jobs: userApplyJobsSchema,
-    user_follows: userFollowsSchema
+    connections: connectionsSchema
 } = require("../models/index")
 const { saveBase64File, generateToken, getDateRange } = require("../utils/helper");
 const Sequelize = require('sequelize');
@@ -456,6 +456,7 @@ const getUserEduction = async (req, res) => {
         });
     }
 };
+
 // get user job
 const getUserJob = async (req, res) => {
     try {
@@ -504,7 +505,6 @@ const getUserJob = async (req, res) => {
             ],
             limit: itemsPerPage,
             offset: offset,
-            logging: true
         });
 
 

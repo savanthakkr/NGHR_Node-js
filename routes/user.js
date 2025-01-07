@@ -11,12 +11,16 @@ const { userRegister, signIn, addUserDocument,
 const { userAuth } = require("../middleware/authentication.js");
 
 const conditionalAuth = (req, res, next) => {
-    if (req.body.skipAuth === true) {
+    if (req.body.some(experience => experience?.skipAuth === true)) {
         return next();
     } else {
         return userAuth(req, res, next);
     }
 };
+
+// Route definition
+router.route('/user_experience').post(conditionalAuth, addUserExperience);
+
 
 // sign in
 router.route('/signin').post(signIn);

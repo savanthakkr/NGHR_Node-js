@@ -32,27 +32,34 @@ const sendConnectionRequest = async (req, res) => {
                 sender_user_id: senderUserId,
                 sender_company_id: senderCompanyId,
                 receiver_user_id: receiverUserId,
-                receiver_company_id: receiverCompanyId
+                receiver_company_id: receiverCompanyId,
             }
         });
 
         if (existingRequest) {
-            return res.status(400).json({ message: 'Connection request already sent.' });
+            if (existingRequest.status === 2) {
+                await connectionsSchema.update({ status: 0 }, { where: { id: existingRequest?.id } });
+                return res.status(200).json({ message: 'Connection request reactivated.', connection: existingRequest });
+            } else {
+                return res.status(400).json({ message: 'Connection request already sent.' });
+            }
         }
 
         const from = senderType.toLowerCase();
         const to = receiverType.toLowerCase();
 
+        // Create a new connection request
         const connection = await connectionsSchema.create({
             sender_user_id: senderUserId,
             sender_company_id: senderCompanyId,
             receiver_user_id: receiverUserId,
             receiver_company_id: receiverCompanyId,
             from,
-            to
+            to,
+            status: 0
         });
 
-        res.status(201).json({ message: 'Connection request sent.', connection });
+        res.status(200).json({ message: 'Connection request sent.', connection });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
@@ -236,10 +243,101 @@ const getConnectionByStatus = async (req, res) => {
     }
 };
 
+// cancel connection request or remove connection
+const cancelConnectionRequest = async (req, res) => {
+    try {
+        const { id } = req?.params;
+        const userId = req?.userInfo?.id;
+        const userType = req?.userInfo?.type;
+
+        let userSenderId = null, userCompanyId = null;
+
+        if (userType === 'User') {
+            userSenderId = userId;
+        } else if (userType === 'Company') {
+            userCompanyId = userId;
+        }
+
+        const connection = await connectionsSchema.findOne({
+            where: {
+                id: id,
+                [Op.or]: [
+                    { sender_user_id: userSenderId },
+                    { sender_company_id: userSenderId },
+                    { receiver_user_id: userSenderId },
+                    { receiver_company_id: userSenderId }
+                ]
+            }
+        });
+
+        if (!connection) {
+            return res.status(404).json({ message: 'Connection not found.' });
+        }
+
+        await connectionsSchema.update({ status: 2 }, {
+            where: { id: id }
+        })
+
+        res.status(200).json({ message: 'Connection canceled or removed successfully.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+// get non accepted request
+const getNonAcceptedRequests = async (req, res) => {
+    try {
+        const userId = req.userInfo?.id;
+        const userType = req.userInfo?.type;
+
+        let whereCondition = {
+            status: 0,
+        };
+
+        if (userType === "User") {
+            whereCondition.receiver_user_id = userId;
+        } else if (userType === "Company") {
+            whereCondition.receiver_company_id = userId;
+        } else {
+            return res.status(400).json({ success: false, message: "Invalid user type." });
+        }
+
+        const data = await connectionsSchema.findAll({
+            where: whereCondition,
+            include: [
+                {
+                    model: userSchema,
+                    as: "senderUser",
+                    attributes: ["id", "name", "profile_image"],
+                },
+                {
+                    model: companiesSchema,
+                    as: "senderCompany",
+                    attributes: ["id", "full_name"],
+                },
+            ],
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Non-accepted requests retrieved successfully.",
+            data: data,
+        });
+    } catch (error) {
+        console.error("Error fetching non-accepted requests:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to retrieve non-accepted requests.",
+        });
+    }
+};
 
 module.exports = {
     sendConnectionRequest,
     acceptConnectionRequest,
     getConnections,
-    getConnectionByStatus
+    getConnectionByStatus,
+    cancelConnectionRequest,
+    getNonAcceptedRequests
 }
