@@ -7,6 +7,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "consultant_id",
                 onDelete: 'cascade'
             });
+            consultant_experiences.hasMany(models.consultant_images, {
+                foreignKey: "consultant_experience_id",
+                onDelete: 'cascade'
+            });
         }
     }
     consultant_experiences.init({
@@ -21,11 +25,15 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BIGINT(20).UNSIGNED,
             references: { model: "consultants", key: "id" }
         },
-        consultant_type: {
+        category: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        area_of_expertise: {
+        service: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        location: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -33,23 +41,15 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        company_name: {
+        serviceDescription: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        title: {
+        payment_milestones: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        employment_type: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        country: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        key_skill: {
+        budget: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },

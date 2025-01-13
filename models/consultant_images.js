@@ -4,7 +4,11 @@ module.exports = (sequelize, DataTypes) => {
     class consultant_images extends Model {
         static associate(models) {
             consultant_images.belongsTo(models.consultant_projects, {
-                foreignKey: "consultant_id",
+                foreignKey: "consultant_project_id",
+                onDelete: 'cascade'
+            });
+            consultant_images.belongsTo(models.consultant_experiences, {
+                foreignKey: "consultant_experience_id",
                 onDelete: 'cascade'
             });
         }
@@ -16,8 +20,13 @@ module.exports = (sequelize, DataTypes) => {
             primaryKey: true,
             type: DataTypes.BIGINT(20).UNSIGNED
         },
+        consultant_experience_id: {
+            allowNull: true,
+            type: DataTypes.BIGINT(20).UNSIGNED,
+            references: { model: "consultant_experiences", key: "id" }
+        },
         consultant_project_id: {
-            allowNull: false,
+            allowNull: true,
             type: DataTypes.BIGINT(20).UNSIGNED,
             references: { model: "consultant_projects", key: "id" }
         },

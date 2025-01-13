@@ -48,6 +48,10 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
+      payment_type: {
+        type: Sequelize.STRING(255),
+        allowNull: false,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

@@ -15,8 +15,13 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.BIGINT(20).UNSIGNED
       },
+      consultant_experience_id: {
+        allowNull: true,
+        type: Sequelize.BIGINT(20).UNSIGNED,
+        references: { model: "consultant_experiences", key: "id" }
+      },
       consultant_project_id: {
-        allowNull: false,
+        allowNull: true,
         type: Sequelize.BIGINT(20).UNSIGNED,
         references: { model: "consultant_projects", key: "id" }
       },

@@ -10,7 +10,8 @@ const {
     user_saved_jobs: userSavedJobsSchema,
     user_resumes: userResumesSchema,
     user_apply_jobs: userApplyJobsSchema,
-    connections: connectionsSchema
+    connections: connectionsSchema,
+    consultants: consultantsSchema,
 } = require("../models/index")
 const { saveBase64File, generateToken, getDateRange } = require("../utils/helper");
 const Sequelize = require('sequelize');
@@ -34,6 +35,11 @@ const getUserTokenInfo = async (access_token) => {
             },
             {
                 model: companiesSchema,
+                required: false,
+                attributes: { exclude: ["createdAt", "updatedAt", "password"] },
+            },
+            {
+                model: consultantsSchema,
                 required: false,
                 attributes: { exclude: ["createdAt", "updatedAt", "password"] },
             },
@@ -794,7 +800,9 @@ const getUserById = async (req, res) => {
 const signOut = async (req, res) => {
     try {
         const { userType } = req.body;
+        console.log('userType: ', userType);
         const userInfo = req?.userInfo;
+        console.log('userInfo: ', userInfo);
 
         if (!userType) {
             return res.status(400).json({ message: 'Invalid request parameters.' });
@@ -832,6 +840,24 @@ const signOut = async (req, res) => {
             await userTokenSchema.destroy({
                 where: {
                     user_id: userInfo?.id
+                },
+            });
+
+            return res.status(200).json({ message: 'User log out successfully.' });
+        } else if (userType === 'Consultant') {
+            const findOne = await consultantsSchema.findOne({
+                where: {
+                    id: userInfo?.id
+                }
+            });
+
+            if (!findOne) {
+                return res.status(401).json({ message: 'User is not available in our system.' });
+            }
+
+            await userTokenSchema.destroy({
+                where: {
+                    consultant_user_id: userInfo?.id
                 },
             });
 

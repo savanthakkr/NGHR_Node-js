@@ -12,6 +12,16 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "consultant_id",
                 onDelete: 'cascade'
             });
+
+            consultants.hasMany(models.consultant_certificates, {
+                foreignKey: "consultant_id",
+                onDelete: 'cascade'
+            });
+
+            consultants.hasOne(models.user_tokens, {
+                foreignKey: "consultant_user_id",
+                onDelete: 'cascade'
+            });
         }
     }
     consultants.init({
