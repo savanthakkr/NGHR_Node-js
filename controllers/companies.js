@@ -4,8 +4,9 @@ const {
     user_tokens: userTokenSchema,
     post_job_vaccancies: postJobSchema,
     company_images: companyImagesSchema,
-    company_follows: companyFollowsSchema,
-    users: userSchema
+    users: userSchema,
+    company_saved_consultants: companySavedConsultantSchema,
+    consultants: consultantsSchema,
 } = require("../models/index.js");
 const { saveBase64File, generateToken, getDateRange, generateGoogleMeetLink } = require("../utils/helper.js");
 const Sequelize = require('sequelize');
@@ -393,6 +394,74 @@ const scheduleGoogleMeet = async (req, res) => {
     }
 }
 
+// save consultant
+const companySavedConsultant = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+        const { consultant_id } = req?.body;
+
+        const existingEntry = await companySavedConsultantSchema.findOne({
+            where: { consultant_id: consultant_id, company_id: userInfo?.id }
+        });
+
+        if (existingEntry) {
+            await companySavedConsultantSchema.destroy({ where: { consultant_id: consultant_id, company_id: userInfo?.id } });
+            return res.status(200).json({
+                error: false,
+                message: "Consultant unsaved successfully!",
+            });
+        }
+
+        const data = await companySavedConsultantSchema.create({
+            consultant_id: consultant_id,
+            company_id: userInfo?.id
+        });
+
+        return res.status(200).json({
+            error: false,
+            message: "Consultant saved successfully!",
+            data: data
+        });
+    } catch (error) {
+        console.error('Error while consultant save status:', error);
+        return res.status(500).json({ error: true, message: 'Failed to consultant save status!' });
+    }
+}
+
+// get saved consultant
+const getCompanySavedConsultant = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+
+        const savedJobs = await companySavedConsultantSchema.findAll({
+            where: { company_id: userInfo?.id },
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+            include: [
+                {
+                    model: companiesSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt", "aadhar_front", "aadhar_back", "aadhar_card_number", "pan_card", "pan_card_number"] },
+                },
+                {
+                    model: consultantsSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                }
+            ],
+        });
+
+        return res.status(200).json({
+            error: false,
+            message: "Company saved consultant fetched successfully!",
+            data: savedJobs,
+        });
+    } catch (error) {
+        console.error('Error while fetching consultant saved jobs:', error);
+        return res.status(500).json({ error: true, message: 'Failed to fetch consultant saved jobs!' });
+    }
+};
+
+
+
+
 module.exports = {
     signup,
     signIn,
@@ -400,5 +469,7 @@ module.exports = {
     updateUserProfile,
     getCompanyList,
     getCompanyById,
-    scheduleGoogleMeet
+    scheduleGoogleMeet,
+    companySavedConsultant,
+    getCompanySavedConsultant
 }

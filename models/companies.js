@@ -37,6 +37,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'receiver_company_id',
                 as: 'receiverCompany',
             });
+
+            companies.hasMany(models.company_saved_consultants, {
+                foreignKey: "company_id",
+                onDelete: 'cascade'
+            });
         }
     }
     companies.init({

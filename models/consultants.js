@@ -22,6 +22,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "consultant_user_id",
                 onDelete: 'cascade'
             });
+
+            consultants.hasMany(models.company_saved_consultants, {
+                foreignKey: "consultant_id",
+                onDelete: 'cascade'
+            });
         }
     }
     consultants.init({
@@ -43,6 +48,14 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         phone_number: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        current_location: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        profile_image: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
