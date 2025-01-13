@@ -6,7 +6,10 @@ const { signup,
     addProjects,
     addCertificatesAndLicense,
     getConsultantById,
-    updateProfileById
+    updateProfileById,
+    getConsultantList,
+    updateProfilePreferenceById,
+    updateProfileDocumentsById
 } = require('../controllers/consultants.js');
 const { userAuth } = require('../middleware/authentication.js');
 
@@ -26,6 +29,7 @@ const projectConditionalAuth = (req, res, next) => {
         return userAuth(req, res, next);
     }
 };
+
 // sign up
 router.route('/signup').post(signup);
 
@@ -46,5 +50,16 @@ router.route('/:id').get(userAuth, getConsultantById);
 
 // update profile by id
 router.route('/update').put(userAuth, updateProfileById);
+
+// update profile preference
+router.route('/update/preference').put(userAuth, updateProfilePreferenceById);
+
+// update license and certificates
+router.route('/update/document/license').put(userAuth, updateProfileDocumentsById);
+
+// get consultant list
+// router.route('/list').post(userAuth, getConsultantList);
+router.route('/list').post(getConsultantList);
+
 
 module.exports = router;

@@ -8,6 +8,7 @@ const {
 } = require("../models/index.js");
 const { saveBase64File, generateToken } = require("../utils/helper.js");
 const { Op } = require('sequelize');
+const Sequelize = require('sequelize');
 
 // sign up
 const signup = async (req, res) => {
@@ -230,6 +231,123 @@ const getConsultantById = async (req, res) => {
 
 // update profile by id
 const updateProfileById = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+
+        const checkUser = await consultantsSchema.findOne({
+            where: {
+                id: req?.userInfo?.id,
+            }
+        });
+
+        if (!checkUser) {
+            res.status(400).json({ error: true, message: 'User not found!!' });
+            return;
+        }
+
+        if (bodyData?.image && (bodyData?.image?.match(/^data:(.+);base64,(.+)$/))) {
+            const profileImage = await saveBase64File(bodyData?.image, 'uploads');
+            bodyData.image = profileImage;
+        }
+
+        await consultantsSchema.update(bodyData, {
+            where: {
+                id: bodyData?.id,
+            }
+        });
+
+
+        const data = await consultantsSchema.findOne({
+            where: {
+                id: bodyData?.id,
+            },
+        });
+
+        res.status(200).json({
+            error: false,
+            message: 'User updated successfully!!!',
+            data: data,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Internal server error!!' });
+        return;
+    }
+}
+
+// get consultant list
+const getConsultantList = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        const experienceLevels = {
+            "entry level": [1, 2],
+            "mid level": [3, 5],
+            "senior level": [6, Infinity],
+        };
+
+        const filters = {};
+
+        if (bodyData?.filters?.length > 0) {
+            bodyData.filters.forEach((filter) => {
+                if (!filter?.id?.trim() || !filter?.value?.trim()) return;
+
+                if (filter?.id === "experience") {
+                    const range = experienceLevels[filter?.value.toLowerCase()];
+                    if (range) {
+                        filters["experience"] = { [Sequelize.Op.between]: range };
+                    }
+                } else {
+                    filters[filter?.id] = { [Sequelize.Op.like]: `%${filter?.value.trim()}%` };
+                }
+            });
+        }
+
+        const data = await consultantExperiencesSchema.findAll({
+            where: { ...filters },
+            attributes: { exclude: ["createdAt", "updatedAt"] },
+            include: [
+                {
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                    model: consultantsSchema,
+                },
+            ],
+            limit: itemsPerPage,
+            offset: offset,
+        });
+
+        const totalConsultant = await consultantExperiencesSchema.count({
+            where: { ...filters },
+        });
+
+        const totalCount = Math.ceil(totalConsultant / itemsPerPage);
+
+        if (!data?.length) {
+            return res.status(404).json({ error: true, message: "No Record Found!" });
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "Consultant data fetched successfully!",
+            data,
+            pageCount: totalCount,
+        });
+    } catch (error) {
+        console.error("Error while fetching consultant:", error);
+        return res.status(500).json({ error: true, message: "Failed to get consultant data!" });
+    }
+};
+
+// update profile preference
+const updateProfilePreferenceById = async (req, res) => {
+
+}
+
+// update license and certificates
+const updateProfileDocumentsById = async (req, res) => {
 
 }
 
@@ -240,5 +358,8 @@ module.exports = {
     addProjects,
     getConsultantById,
     addCertificatesAndLicense,
-    updateProfileById
+    updateProfileById,
+    getConsultantList,
+    updateProfilePreferenceById,
+    updateProfileDocumentsById
 };

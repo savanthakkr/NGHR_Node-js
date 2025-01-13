@@ -800,9 +800,7 @@ const getUserById = async (req, res) => {
 const signOut = async (req, res) => {
     try {
         const { userType } = req.body;
-        console.log('userType: ', userType);
         const userInfo = req?.userInfo;
-        console.log('userInfo: ', userInfo);
 
         if (!userType) {
             return res.status(400).json({ message: 'Invalid request parameters.' });
