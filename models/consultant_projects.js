@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
             });
 
             consultant_projects.hasMany(models.consultant_images, {
-                foreignKey: "consultant_id",
+                foreignKey: "consultant_project_id",
                 onDelete: 'cascade'
             });
         }
@@ -51,6 +51,10 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
         testimonials: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        payment_type: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },

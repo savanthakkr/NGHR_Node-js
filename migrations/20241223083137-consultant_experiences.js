@@ -20,11 +20,15 @@ module.exports = {
         type: Sequelize.BIGINT(20).UNSIGNED,
         references: { model: "consultants", key: "id" }
       },
-      consultant_type: {
+      category : {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      area_of_expertise: {
+      service : {
+        type: Sequelize.STRING(255),
+        allowNull: false,
+      },
+      location: {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
@@ -32,23 +36,15 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      company_name: {
+      serviceDescription: {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      title: {
+      payment_milestones: {
         type: Sequelize.STRING(255),
         allowNull: false,
       },
-      employment_type: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      country: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      key_skill: {
+      budget: {
         type: Sequelize.STRING(255),
         allowNull: false,
       },

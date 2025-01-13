@@ -18,6 +18,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "company_user_id",
                 onDelete: 'cascade'
             });
+
+            user_tokens.belongsTo(models.consultants, {
+                foreignKey: "consultant_user_id",
+                onDelete: 'cascade'
+            });
         }
     };
 
@@ -37,16 +42,16 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BIGINT(20).UNSIGNED,
             references: { model: "users", key: "id" }
         },
-        company_user_id:{
+        company_user_id: {
             allowNull: true,
             type: DataTypes.BIGINT(20).UNSIGNED,
             references: { model: "companies", key: "id" }
         },
-        // user_type: {
-        //     allowNull: false,
-        //     type: DataTypes.STRING(255),
-        //     comment: "0 => user, 1 => company, 2 => consultant"
-        // },
+        consultant_user_id: {
+            allowNull: true,
+            type: DataTypes.BIGINT(20).UNSIGNED,
+            references: { model: "consultants", key: "id" }
+        },
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE,

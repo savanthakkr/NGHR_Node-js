@@ -20,7 +20,9 @@ const userAuth = async (req, res, next) => {
         if (userToken && userToken?.user) {
             req.userInfo = userToken?.user?.dataValues;
         } else if (userToken && userToken?.company) {
-            req.userInfo = userToken.company.dataValues;
+            req.userInfo = userToken?.company?.dataValues;
+        } else if (userToken && userToken?.consultant) {
+            req.userInfo = userToken?.consultant?.dataValues;
         } else {
             return res.status(404).send({ message: 'No valid user or company data found' });
         }
