@@ -53,11 +53,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         current_location: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         profile_image: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         createdAt: {
             allowNull: false,

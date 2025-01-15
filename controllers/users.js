@@ -56,9 +56,6 @@ const userRegister = async (req, res) => {
             where: { name },
         });
 
-        if (existingName) {
-            return res.status(400).json({ error: true, message: 'Name already exists!' });
-        }
 
         const existingEmail = await userSchema.findOne({
             where: { email: email },
@@ -313,7 +310,6 @@ const updateUser = async (req, res) => {
                 id: bodyData?.id,
             }
         });
-
         res.status(200).json({
             error: false,
             message: 'User updated successfully!!!',

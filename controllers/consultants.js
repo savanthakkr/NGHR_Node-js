@@ -131,7 +131,7 @@ const addExperience = async (req, res) => {
 const addProjects = async (req, res) => {
     try {
         const bodyData = req?.body;
-
+        
         for (const project of bodyData) {
             const createdProject = await consultantProjectsSchema.create({
                 ...project,
