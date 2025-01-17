@@ -70,8 +70,8 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.TEXT,
         },
         employee_expectations: {
-            allowNull: true,
-            type: DataTypes.TEXT,
+            type: DataTypes.STRING(255),
+            allowNull: false,
         },
         employee_contributions: {
             allowNull: true,

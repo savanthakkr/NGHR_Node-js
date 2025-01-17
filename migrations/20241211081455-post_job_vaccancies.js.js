@@ -53,8 +53,8 @@ module.exports = {
         type: Sequelize.TEXT,
       },
       employee_expectations: {
-        allowNull: true,
-        type: Sequelize.TEXT,
+        allowNull: false,
+        type: Sequelize.STRING(255),
       },
       employee_contributions: {
         allowNull: true,
