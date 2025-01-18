@@ -28,6 +28,12 @@ module.exports = (sequelize, DataTypes) => {
             references: { model: "users", key: "id" }
         },
         employment_type: {
+            type: DataTypes.ENUM('1', '2', '3', '4'),
+            allowNull: true,
+            after: 'employment_type',
+            comment: '1 -> experienced, 2 -> fresher, 3 -> intern, 4 -> freelancer'
+        },
+        experience_type: {
             type: DataTypes.STRING(350),
             allowNull: true
         },
