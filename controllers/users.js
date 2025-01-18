@@ -258,9 +258,21 @@ const updateUserExperience = async (req, res) => {
 const getUserByAuthToken = async (req, res) => {
     try {
         const data = await userSchema.findOne({
-            where: {
-                id: req?.userInfo?.id,
-            }
+            where: { id: req?.userInfo?.id },
+            include: [
+                {
+                    model: userDocumentSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: userEductionsSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: userExperienceSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                }
+            ]
         });
 
         if (!data) {
