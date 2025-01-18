@@ -131,7 +131,7 @@ const addExperience = async (req, res) => {
 const addProjects = async (req, res) => {
     try {
         const bodyData = req?.body;
-        
+
         for (const project of bodyData) {
             const createdProject = await consultantProjectsSchema.create({
                 ...project,
@@ -351,6 +351,42 @@ const updateProfileDocumentsById = async (req, res) => {
 
 }
 
+
+// get user ny id
+const getUserByAuthToken = async (req, res) => {
+    try {
+        const data = await consultantsSchema.findOne({
+            where: { id: req?.userInfo?.id },
+            include: [
+                {
+                    model: consultantExperiencesSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: consultantProjectsSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: consultantCertificatesSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                }
+            ]
+        });
+
+        if (!data) {
+            res.status(400).json({ error: true, message: 'User not found!!' });
+            return;
+        };
+
+        res
+            .status(200)
+            .json({ error: false, message: "Request has been completed successfully!!", data });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to get data!' });
+        return;
+    }
+};
 module.exports = {
     signup,
     signin,
@@ -361,5 +397,6 @@ module.exports = {
     updateProfileById,
     getConsultantList,
     updateProfilePreferenceById,
-    updateProfileDocumentsById
+    updateProfileDocumentsById,
+    getUserByAuthToken
 };
