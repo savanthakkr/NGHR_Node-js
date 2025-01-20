@@ -9,6 +9,13 @@ const { signup, signIn, getCompanyUserByAuthToken,
     getCompanySavedConsultant
 } = require('../controllers/companies.js');
 
+const conditionalAuth = (req, res, next) => {
+    if (req.body.skipAuth === true) {
+        return next();
+    } else {
+        return userAuth(req, res, next);
+    }
+};
 // sign up
 router.route('/signup').post(signup);
 
@@ -19,7 +26,7 @@ router.route('/signin').post(signIn);
 router.route('/user').get(userAuth, getCompanyUserByAuthToken);
 
 // update profile
-router.route('/update').put(userAuth, updateUserProfile);
+router.route('/update').put(conditionalAuth, updateUserProfile);
 
 // get company list
 router.route('/list').post(userAuth, getCompanyList);
@@ -35,5 +42,6 @@ router.route('/save/consultant').post(userAuth, companySavedConsultant);
 
 // get user saved job
 router.route('/save/job').get(userAuth, getCompanySavedConsultant);
+
 
 module.exports = router;

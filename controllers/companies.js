@@ -28,30 +28,20 @@ const signup = async (req, res) => {
             return res.status(400).json({ error: true, message: 'Email already exists!' });
         }
 
-        if (!bodyData?.aadhar_front || !bodyData?.aadhar_back || !bodyData?.pan_card) {
-            return res.status(400).json({ error: true, message: 'All document fields are required!' });
-        }
+        // if (!bodyData?.aadhar_front || !bodyData?.aadhar_back || !bodyData?.pan_card) {
+        //     return res.status(400).json({ error: true, message: 'All document fields are required!' });
+        // }
 
-        const afPath = await saveBase64File(bodyData?.aadhar_front, 'uploads');
-        const abPath = await saveBase64File(bodyData?.aadhar_back, 'uploads');
-        const panPath = await saveBase64File(bodyData?.pan_card, 'uploads');
+        if (bodyData?.aadhar_front || bodyData?.aadhar_back || bodyData?.pan_card) {
+            bodyData.aadhar_front = await saveBase64File(bodyData?.aadhar_front, 'uploads');
+            bodyData.aadhar_back = await saveBase64File(bodyData?.aadhar_back, 'uploads');
+            bodyData.pan_card = await saveBase64File(bodyData?.pan_card, 'uploads');
+            // return res.status(400).json({ error: true, message: 'All document fields are required!' });
+        }
 
         const dataToSave = {
             ...bodyData,
             type: "Company",
-            company_name: bodyData?.company_name?.value,
-            company_type: bodyData?.company_type?.value,
-            company_sector: bodyData?.company_sector?.value,
-            company_industry: bodyData?.company_industry?.value,
-            founded_in_year: bodyData?.founded_in_year?.value,
-            country: bodyData?.country?.value,
-            state: bodyData?.state?.value,
-            city: bodyData?.city?.value,
-            number_of_employee: bodyData?.number_of_employee?.value,
-            revenue_range: bodyData?.revenue_range?.value,
-            aadhar_front: afPath,
-            aadhar_back: abPath,
-            pan_card: panPath,
         };
 
         const data = await companiesSchema.create(dataToSave);
@@ -151,7 +141,7 @@ const updateUserProfile = async (req, res) => {
 
         const checkUser = await companiesSchema.findOne({
             where: {
-                id: req?.userInfo?.id,
+                id: req?.userInfo?.id || bodyData?.id,
             }
         });
 
@@ -163,6 +153,16 @@ const updateUserProfile = async (req, res) => {
         if (bodyData?.image && (bodyData?.image?.match(/^data:(.+);base64,(.+)$/))) {
             const profileImage = await saveBase64File(bodyData?.image, 'uploads');
             bodyData.image = profileImage;
+        }
+
+        const base64Regex = /^data:(.+);base64,(.+)$/;
+
+        if ((bodyData?.aadhar_front && base64Regex.test(bodyData?.aadhar_front)) ||
+            (bodyData?.aadhar_back && base64Regex.test(bodyData?.aadhar_back)) ||
+            (bodyData?.pan_card && base64Regex.test(bodyData?.pan_card))) {
+            bodyData.aadhar_front = await saveBase64File(bodyData?.aadhar_front, 'uploads');
+            bodyData.aadhar_back = await saveBase64File(bodyData?.aadhar_back, 'uploads');
+            bodyData.pan_card = await saveBase64File(bodyData?.pan_card, 'uploads');
         }
 
         await companiesSchema.update(bodyData, {
