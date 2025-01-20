@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 const sequelize = new Sequelize(
     "nghr",
     "root",
-    "",
+    "pAssW1@!1!!123",
     {
         host: "localhost",
         dialect: "mysql",
