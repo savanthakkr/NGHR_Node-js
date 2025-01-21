@@ -59,6 +59,18 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
+        user_name: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        language: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        current_reside_country: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         createdAt: {
             allowNull: false,
             type: DataTypes.DATE,
