@@ -245,9 +245,9 @@ const updateProfileById = async (req, res) => {
             return;
         }
 
-        if (bodyData?.image && (bodyData?.image?.match(/^data:(.+);base64,(.+)$/))) {
-            const profileImage = await saveBase64File(bodyData?.image, 'uploads');
-            bodyData.image = profileImage;
+        if (bodyData?.profile_image && (bodyData?.profile_image?.match(/^data:(.+);base64,(.+)$/))) {
+            const profileImage = await saveBase64File(bodyData?.profile_image, 'uploads');
+            bodyData.profile_image = profileImage;
         }
 
         await consultantsSchema.update(bodyData, {
@@ -255,7 +255,6 @@ const updateProfileById = async (req, res) => {
                 id: bodyData?.id,
             }
         });
-
 
         const data = await consultantsSchema.findOne({
             where: {
@@ -341,16 +340,91 @@ const getConsultantList = async (req, res) => {
     }
 };
 
-// update profile preference
+// update profile preference || experience
 const updateProfilePreferenceById = async (req, res) => {
+    try {
+        const bodyData = req?.body;
 
+        const checkUser = await consultantsSchema.findOne({
+            where: {
+                id: req?.userInfo?.id || bodyData?.id,
+            }
+        });
+
+        if (!checkUser) {
+            res.status(400).json({ error: true, message: 'User not found!!' });
+            return;
+        }
+
+        await consultantExperiencesSchema.update(bodyData, {
+            where: {
+                id: bodyData?.id,
+                consultant_id: bodyData?.consultant_id
+            }
+        })
+        // remove image from the folder
+        if (bodyData?.remove_images && bodyData?.remove_images?.length > 0) {
+            const imagesToRemove = await consultantImagesSchema.findAll({
+                where: {
+                    id: { [Op.in]: bodyData?.remove_images },
+                }
+            });
+
+            imagesToRemove?.map((image) => {
+                const fileName = image?.image?.split('/').pop();
+                const filePath = `uploads/${fileName}`;
+                try {
+                    fs.unlinkSync(filePath);
+                } catch (error) {
+                    console.error(`Failed to delete file: ${filePath}`, error);
+                }
+            });
+
+            await consultantImagesSchema.destroy({
+                where: {
+                    id: { [Op.in]: bodyData?.remove_images, }
+                }
+            });
+        }
+
+        if (bodyData?.consultant_images && bodyData?.consultant_images?.length > 0) {
+            const imagePromises = bodyData?.consultant_images?.map(async (imageBase64) => {
+                if (!imageBase64?.images?.match(/^data:(.+);base64,(.+)$/)) {
+                    return;
+                } else {
+                    const imagePath = await saveBase64File(imageBase64?.images, 'uploads');
+                    await consultantImagesSchema.create({
+                        consultant_experience_id: bodyData?.id,
+                        images: imagePath,
+                    });
+                }
+            });
+            await Promise.all(imagePromises);
+        }
+
+        const data = await consultantExperiencesSchema.findOne({
+            where: {
+                id: bodyData?.id,
+            },
+            include: { model: consultantImagesSchema }
+        });
+
+        res.status(200).json({
+            error: false,
+            message: 'User updated successfully!!!',
+            data: data,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Internal server error!!' });
+        return;
+    }
 }
 
 // update license and certificates
 const updateProfileDocumentsById = async (req, res) => {
 
 }
-
 
 // get user ny id
 const getUserByAuthToken = async (req, res) => {
@@ -361,6 +435,12 @@ const getUserByAuthToken = async (req, res) => {
                 {
                     model: consultantExperiencesSchema,
                     attributes: { exclude: ["createdAt", "updatedAt"] },
+                    include: [
+                        {
+                            model: consultantImagesSchema,
+                            attributes: ["id", "images"]
+                        }
+                    ]
                 },
                 {
                     model: consultantProjectsSchema,
@@ -387,6 +467,8 @@ const getUserByAuthToken = async (req, res) => {
         return;
     }
 };
+
+
 module.exports = {
     signup,
     signin,
