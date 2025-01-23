@@ -9,7 +9,7 @@ const { signup,
     updateProfileById,
     getConsultantList,
     updateProfilePreferenceById,
-    updateProfileDocumentsById,
+    updateProfileProjectsById,
     getUserByAuthToken
 } = require('../controllers/consultants.js');
 const { userAuth } = require('../middleware/authentication.js');
@@ -56,7 +56,7 @@ router.route('/update').put(userAuth, updateProfileById);
 router.route('/update/preference').put(userAuth, updateProfilePreferenceById);
 
 // update license and certificates
-router.route('/update/document/license').put(userAuth, updateProfileDocumentsById);
+router.route('/update/document/project').put(userAuth, updateProfileProjectsById);
 
 // get consultant list
 // router.route('/list').post(userAuth, getConsultantList);

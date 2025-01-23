@@ -164,7 +164,7 @@ const addCertificatesAndLicense = async (req, res) => {
         const bodyData = req?.body;
 
         for (const certificate of bodyData) {
-            const certificatePath = await saveBase64File(certificate.documents, 'uploads');
+            const certificatePath = await saveBase64File(certificate?.documents, 'uploads');
             await consultantCertificatesSchema.create({
                 consultant_id: certificate?.consultant_id,
                 documents: certificatePath,
@@ -172,7 +172,13 @@ const addCertificatesAndLicense = async (req, res) => {
             });
         }
 
-        return res.status(200).json({ message: "Certificates and licenses added successfully." });
+        const data = await consultantCertificatesSchema.findAll({
+            where: {
+                consultant_id: bodyData[0]?.consultant_id
+            }
+        });
+
+        return res.status(200).json({ message: "Certificates and licenses added successfully.", data: data });
     } catch (error) {
         console.error("Error in addCertificatesAndLicense:", error);
         return res.status(500).json({
@@ -421,10 +427,45 @@ const updateProfilePreferenceById = async (req, res) => {
     }
 }
 
-// update license and certificates
-const updateProfileDocumentsById = async (req, res) => {
+// update profile project
+const updateProfileProjectsById = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+        console.log('bodyData: ', bodyData);
 
-}
+        for (const project of bodyData) {
+            let existingProject = await consultantProjectsSchema.findOne({
+                where: {
+                    consultant_id: project?.consultant_id,
+                    id: project?.id,
+                },
+            });
+
+            if (existingProject) {
+                await existingProject.update({
+                    ...project
+                }, {
+                    where: {
+                        consultant_id: project?.consultant_id
+                    }
+                });
+
+            } else {
+                await consultantProjectsSchema.create({
+                    ...project,
+                    consultant_id: project?.consultant_id,
+                });
+            }
+        }
+
+        return res.status(200).json({ message: "Projects updated successfully." });
+    } catch (error) {
+        console.error("Error in updateProfileProjectsById:", error);
+        return res.status(500).json({
+            message: "An error occurred while updating projects.",
+        });
+    }
+};
 
 // get user ny id
 const getUserByAuthToken = async (req, res) => {
@@ -479,6 +520,6 @@ module.exports = {
     updateProfileById,
     getConsultantList,
     updateProfilePreferenceById,
-    updateProfileDocumentsById,
+    updateProfileProjectsById,
     getUserByAuthToken
 };
