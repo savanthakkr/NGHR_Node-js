@@ -510,7 +510,7 @@ const getUserJob = async (req, res) => {
         }
 
         const data = await postJobSchema.findAll({
-            where: { ...filters },
+            where: { ...filters, status: 1 },
             include: [
                 {
                     model: companiesSchema,
