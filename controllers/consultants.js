@@ -76,7 +76,7 @@ const signin = async (req, res) => {
         });
 
         const consultantData = await consultantsSchema.findOne({
-            attributes: ['id', 'full_name', 'email', 'phone_number'],
+            attributes: ['id', 'full_name', 'email', 'phone_number', 'profile_image'],
             where: { id: consultant.id },
             include: [
                 {
@@ -431,7 +431,6 @@ const updateProfilePreferenceById = async (req, res) => {
 const updateProfileProjectsById = async (req, res) => {
     try {
         const bodyData = req?.body;
-        console.log('bodyData: ', bodyData);
 
         for (const project of bodyData) {
             let existingProject = await consultantProjectsSchema.findOne({

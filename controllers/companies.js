@@ -87,7 +87,7 @@ const signIn = async (req, res) => {
         await userTokenSchema.create({ access_token: token, company_user_id: findUser?.id });
 
         const userData = await companiesSchema.findOne({
-            attributes: ['id', 'email'],
+            attributes: ['id', 'email', 'full_name', 'company_name', 'image', 'type'],
             where: { email: findUser?.email },
             include: [
                 {
