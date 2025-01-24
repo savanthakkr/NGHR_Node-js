@@ -111,7 +111,7 @@ const signIn = async (req, res) => {
         await userTokenSchema.create({ access_token: token, user_id: findUser?.id });
 
         const userData = await userSchema.findOne({
-            attributes: ['id', 'email', 'status', 'type'],
+            attributes: ['id', 'email', 'status', 'type', 'profile_image', 'name', 'username'],
             where: { email: findUser?.email },
             include: [
                 {
@@ -523,7 +523,7 @@ const getUserJob = async (req, res) => {
 
 
         const totalJobs = await postJobSchema.count({
-            where: { ...filters },
+            where: { ...filters, status: 1 },
         });
 
         const totalCount = Math.ceil(totalJobs / itemsPerPage);
@@ -536,7 +536,8 @@ const getUserJob = async (req, res) => {
             error: false,
             message: 'Job data fetched successfully!',
             data: data,
-            count: totalCount
+            count: totalCount,
+            jobCount: totalJobs
         });
     } catch (error) {
         console.error('Error while fetching job:', error);
