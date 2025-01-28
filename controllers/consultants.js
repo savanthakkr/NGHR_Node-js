@@ -520,7 +520,6 @@ const getUserByAuthToken = async (req, res) => {
 // get the list of all jobs when a company searches for candidates
 const getJobList = async (req, res) => {
     try {
-        console.log('aave che')
         const bodyData = req?.body
         const currentPage = bodyData?.currentPage || 1;
         const itemsPerPage = bodyData?.itemsPerPage || 5;
@@ -610,6 +609,21 @@ const consultantApplyJob = async (req, res) => {
             });
         }
 
+        const findOne = await consultantApplyJobSchema.findOne({
+            where: {
+                consultant_id: req?.userInfo?.id,
+                job_id: jobId,
+                company_id: companyId,
+            }
+        });
+
+        if (findOne) {
+            return res.status(401).json({
+                error: true,
+                message: 'You have alredy apply for this job!'
+            });
+        }
+
         const data = await consultantApplyJobSchema.create({
             consultant_id: req?.userInfo?.id,
             job_id: jobId,
@@ -643,5 +657,6 @@ module.exports = {
     getUserByAuthToken,
     getJobList,
     getJobListById,
-    consultantApplyJob
+    consultantApplyJob,
+    getConsultantApplyJobStatus
 };
