@@ -610,16 +610,17 @@ const consultantApplyJob = async (req, res) => {
             });
         }
 
-        const application = await consultantApplyJobSchema.create({
+        const data = await consultantApplyJobSchema.create({
             consultant_id: req?.userInfo?.id,
             job_id: jobId,
             company_id: companyId,
+            status: 0
         });
 
-        return res.status(201).json({
+        return res.status(200).json({
             error: false,
             message: 'Job application apply successfully!',
-            application,
+            data,
         });
     } catch (error) {
         console.error('Error while applying for job:', error);
