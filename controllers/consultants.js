@@ -657,6 +657,5 @@ module.exports = {
     getUserByAuthToken,
     getJobList,
     getJobListById,
-    consultantApplyJob,
-    getConsultantApplyJobStatus
+    consultantApplyJob
 };
