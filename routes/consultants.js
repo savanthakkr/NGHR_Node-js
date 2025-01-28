@@ -10,7 +10,10 @@ const { signup,
     getConsultantList,
     updateProfilePreferenceById,
     updateProfileProjectsById,
-    getUserByAuthToken
+    getUserByAuthToken,
+    getJobList,
+    getJobListById,
+    consultantApplyJob
 } = require('../controllers/consultants.js');
 const { userAuth } = require('../middleware/authentication.js');
 
@@ -64,4 +67,14 @@ router.route('/list').post(getConsultantList);
 
 // get consultant by id
 router.route('/auth/user').get(userAuth, getUserByAuthToken);
+
+// get the list of all jobs when a company searches for candidates
+router.route('/auth/user/jobs').post(getJobList);
+
+// get job by id
+router.route('/auth/user/jobs/:id').get(userAuth, getJobListById);
+
+// consultant add job
+router.route('/auth/user/apply/job').post(userAuth, consultantApplyJob);
+
 module.exports = router;

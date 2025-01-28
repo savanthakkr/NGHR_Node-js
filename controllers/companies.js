@@ -7,6 +7,7 @@ const {
     users: userSchema,
     company_saved_consultants: companySavedConsultantSchema,
     consultants: consultantsSchema,
+    company_search_consultants: searchCandidateSchema
 } = require("../models/index.js");
 const { saveBase64File, generateToken, getDateRange, generateGoogleMeetLink } = require("../utils/helper.js");
 const Sequelize = require('sequelize');
@@ -459,8 +460,37 @@ const getCompanySavedConsultant = async (req, res) => {
     }
 };
 
+// add search candidate
+const addSearchCandidate = async (req, res) => {
+    try {
+        const bodyData = req.body;
 
+        const data = await searchCandidateSchema.create({
+            ...bodyData,
+            company_id: req?.userInfo?.id || bodyData?.company_id
+        });
 
+        if (bodyData?.images && bodyData?.images?.length > 0) {
+            for (const base64Image of bodyData?.images) {
+                const imagePath = await saveBase64File(base64Image?.images, 'uploads');
+                await companyImagesSchema.create({
+                    search_consultant_images: imagePath,
+                    company_id: bodyData?.company_id || req?.userInfo?.id
+                });
+            }
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "Search candidate added successfully!",
+            data: data
+        });
+
+    } catch (error) {
+        console.error("Error while adding search candidate:", error);
+        return res.status(500).json({ error: true, message: "Internal server error" });
+    }
+};
 
 module.exports = {
     signup,
@@ -471,5 +501,6 @@ module.exports = {
     getCompanyById,
     scheduleGoogleMeet,
     companySavedConsultant,
-    getCompanySavedConsultant
+    getCompanySavedConsultant,
+    addSearchCandidate
 }

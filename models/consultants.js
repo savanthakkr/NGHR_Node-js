@@ -27,6 +27,11 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "consultant_id",
                 onDelete: 'cascade'
             });
+
+            consultants.hasMany(models.consultant_apply_jobs, {
+                foreignKey: "consultant_id",
+                onDelete: 'cascade'
+            });
         }
     }
     consultants.init({

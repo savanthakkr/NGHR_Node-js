@@ -5,6 +5,9 @@ const {
     consultant_images: consultantImagesSchema,
     consultant_certificates: consultantCertificatesSchema,
     user_tokens: userTokenSchema,
+    company_search_consultants: searchCandidateSchema,
+    companies: companiesSchema,
+    consultant_apply_jobs: consultantApplyJobSchema
 } = require("../models/index.js");
 const { saveBase64File, generateToken } = require("../utils/helper.js");
 const { Op } = require('sequelize');
@@ -318,6 +321,12 @@ const getConsultantList = async (req, res) => {
                 {
                     attributes: { exclude: ["createdAt", "updatedAt"] },
                     model: consultantsSchema,
+                    include: [
+                        {
+                            model: consultantProjectsSchema,
+                            attributes: { exclude: ["createdAt", "updatedAt"] },
+                        }
+                    ]
                 },
             ],
             limit: itemsPerPage,
@@ -508,6 +517,116 @@ const getUserByAuthToken = async (req, res) => {
     }
 };
 
+// get the list of all jobs when a company searches for candidates
+const getJobList = async (req, res) => {
+    try {
+        console.log('aave che')
+        const bodyData = req?.body
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        const data = await searchCandidateSchema.findAll(
+            {
+                where: { status: 1 },
+                include: [
+                    {
+                        model: companiesSchema,
+                    }
+                ]
+            });
+
+        const count = await searchCandidateSchema.count({ where: { status: 1 } });
+
+        const totalCount = Math.ceil(count / itemsPerPage);
+
+        res
+            .status(200)
+            .json({
+                error: false, message: "Request has been completed successfully!!",
+                data: data,
+                count: count,
+                totalPageCount: totalCount
+            });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to get data!' });
+        return;
+    }
+}
+
+// get job list by id
+const getJobListById = async (req, res) => {
+    try {
+        const data = await searchCandidateSchema.findOne(
+            {
+                where: { status: 1, id: req?.params?.id },
+                include: [
+                    {
+                        model: companiesSchema,
+                    }
+                ]
+            });
+
+        const referrredData = await consultantExperiencesSchema.findAll({
+            where: { consultant_id: { [Op.ne]: req?.userInfo?.id } },
+            include: [
+                {
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                    model: consultantsSchema,
+                    include: [
+                        {
+                            model: consultantProjectsSchema,
+                            attributes: { exclude: ["createdAt", "updatedAt"] },
+                        }
+                    ]
+                },
+            ],
+        });
+
+        res
+            .status(200)
+            .json({
+                error: false, message: "Request has been completed successfully!!",
+                data: data,
+                similarJob: referrredData
+            });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to get data!' });
+        return;
+    }
+}
+
+// consultant apply job
+const consultantApplyJob = async (req, res) => {
+    try {
+        const { jobId, companyId } = req.body;
+
+        if (!jobId || !companyId) {
+            return res.status(400).json({
+                error: true,
+                message: 'jobId, companyId, and userId are required!',
+            });
+        }
+
+        const application = await consultantApplyJobSchema.create({
+            consultant_id: req?.userInfo?.id,
+            job_id: jobId,
+            company_id: companyId,
+        });
+
+        return res.status(201).json({
+            error: false,
+            message: 'Job application apply successfully!',
+            application,
+        });
+    } catch (error) {
+        console.error('Error while applying for job:', error);
+        res.status(500).json({ error: true, message: 'Failed to apply for job!' });
+    }
+};
+
 
 module.exports = {
     signup,
@@ -520,5 +639,8 @@ module.exports = {
     getConsultantList,
     updateProfilePreferenceById,
     updateProfileProjectsById,
-    getUserByAuthToken
+    getUserByAuthToken,
+    getJobList,
+    getJobListById,
+    consultantApplyJob
 };
