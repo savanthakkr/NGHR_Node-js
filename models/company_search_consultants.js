@@ -3,8 +3,13 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class company_search_consultants extends Model {
         static associate(models) {
-            company_search_consultants.hasMany(models.companies, {
+            company_search_consultants.belongsTo(models.companies, {
                 foreignKey: "company_id",
+                onDelete: 'cascade'
+            });
+
+            company_search_consultants.hasMany(models.consultant_apply_jobs, {
+                foreignKey: "job_id",
                 onDelete: 'cascade'
             });
         }
@@ -44,6 +49,12 @@ module.exports = (sequelize, DataTypes) => {
         location: {
             type: DataTypes.STRING(255),
             allowNull: false,
+        },
+        status: {
+            allowNull: false,
+            type: DataTypes.TINYINT(1),
+            defaultValue: 1,
+            comment: "0 => not active, 1 => active"
         },
         createdAt: {
             allowNull: false,

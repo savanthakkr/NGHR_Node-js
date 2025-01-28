@@ -480,7 +480,7 @@ const addSearchCandidate = async (req, res) => {
             }
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             error: false,
             message: "Search candidate added successfully!",
             data: data

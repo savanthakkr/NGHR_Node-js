@@ -8,47 +8,33 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.createTable("company_search_consultants", {
+    await queryInterface.createTable('consultant_apply_jobs', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.BIGINT(20).UNSIGNED
       },
-      company_id: {
+      consultant_id: {
+        allowNull: false,
+        type: Sequelize.BIGINT(20).UNSIGNED,
+        references: { model: "consultants", key: "id" }
+      },
+      job_id: {
         allowNull: true,
         type: Sequelize.BIGINT(20).UNSIGNED,
+        references: { model: "company_search_consultants", key: "id" }
+      },
+      company_id: {
+        allowNull: false,
+        type: Sequelize.BIGINT(20).UNSIGNED,
         references: { model: "companies", key: "id" }
-      },
-      consultant_category: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      service: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      serviceDescription: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      payment_milestones: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      budget: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-      },
-      location: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
       },
       status: {
         allowNull: false,
         type: Sequelize.TINYINT(1),
-        defaultValue: 1,
-        comment: "0 => not active, 1 => active"
+        defaultValue: 0,
+        comment: "0=> pending 1 => Accepted 2 =>Rejected "
       },
       createdAt: {
         allowNull: false,
@@ -68,6 +54,6 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.dropTable('company_search_consultants');
+    await queryInterface.dropTable('consultant_apply_jobs');
   }
 };
