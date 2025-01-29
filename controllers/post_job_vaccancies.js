@@ -280,9 +280,6 @@ const updateJobStatus = async (req, res) => {
 const userApplyChangeJobStatus = async (req, res) => {
     try {
         const { applicationId, newStatus, userId } = req.body;
-        console.log('applicationId: ', applicationId);
-        console.log('userId: ', userId);
-        console.log('newStatus: ', newStatus);
         const userInfo = req?.userInfo;
 
         // 0 => In Review, 1 => In Process, 2 => Shortlisted, 3 => Rejected

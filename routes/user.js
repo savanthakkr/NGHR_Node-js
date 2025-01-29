@@ -6,7 +6,8 @@ const { userRegister, signIn, addUserDocument,
     updateUserPreferences, getUserPreferences, getUserExperience, getUserJob,
     userSavedJob, getUserSavedJob, addUserResume, getUserResume, applyJob,
     getUserListByJobId, getUserById, signOut, updateUserExperience,
-    getUserEduction
+    getUserEduction,
+    candidateConsultantUserList
 } = require("../controllers/users.js");
 const { userAuth } = require("../middleware/authentication.js");
 
@@ -87,5 +88,7 @@ router.route('/:id').get(getUserById);
 // user sign out 
 router.route('/log-out').post(userAuth, signOut);
 
+// candidate consultant user list
+router.route('/consultant/candidate/list').post(candidateConsultantUserList);
 
 module.exports = router;

@@ -7,12 +7,14 @@ const {
     users: userSchema,
     company_saved_consultants: companySavedConsultantSchema,
     consultants: consultantsSchema,
-    company_search_consultants: searchCandidateSchema
+    company_search_consultants: searchCandidateSchema,
+    consultant_apply_jobs: consultantApplyjobSchema
 } = require("../models/index.js");
 const { saveBase64File, generateToken, getDateRange, generateGoogleMeetLink } = require("../utils/helper.js");
 const Sequelize = require('sequelize');
 const { Op } = require('sequelize');
 const fs = require('fs');
+
 
 // signup
 const signup = async (req, res) => {
@@ -335,9 +337,14 @@ const getCompanyById = async (req, res) => {
             where: {
                 id: company_id,
             },
-            include: {
-                model: postJobSchema,
-            },
+            include: [
+                {
+                    model: postJobSchema,
+                },
+                {
+                    model: companyImagesSchema
+                }
+            ],
         });
 
         if (!company) {
@@ -492,6 +499,132 @@ const addSearchCandidate = async (req, res) => {
     }
 };
 
+// apply consultant list
+const getConsultantApplyjobList = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+        const bodyData = req?.body;
+
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        const applyConsultantJobList = await consultantApplyjobSchema.findAll({
+            attributes: [
+                'id',
+                'status',
+                'company_id',
+                'consultant_id',
+                'job_id',
+                [
+                    Sequelize.literal(`(
+                            SELECT COUNT(*)
+                            FROM consultant_apply_jobs
+                            WHERE consultant_apply_jobs.job_id IN (
+                                SELECT id FROM company_search_consultants WHERE company_search_consultants.company_id = ${userInfo?.id}
+                            )
+                        )`),
+                    'totalApplications'
+                ],
+                [
+                    Sequelize.literal(`(
+                            SELECT COUNT(*)
+                            FROM consultant_apply_jobs
+                            WHERE consultant_apply_jobs.job_id IN (
+                                SELECT id FROM company_search_consultants WHERE company_search_consultants.company_id = ${userInfo?.id}
+                            ) AND consultant_apply_jobs.status = 2
+                        )`),
+                    'shortlistedApplications'
+                ]
+            ],
+            where: {
+                company_id: userInfo?.id,
+            },
+            include: [
+                {
+                    model: consultantsSchema,
+                    attributes: ['id', 'full_name', 'email', 'profile_image']
+                },
+                {
+                    model: searchCandidateSchema,
+                    attributes: ['id', 'consultant_category']
+                }
+            ],
+            limit: itemsPerPage,
+            offset: offset,
+        });
+
+        const totalJobs = await consultantApplyjobSchema.count({
+            where: {
+                company_id: userInfo?.id,
+            }
+        });
+
+        const totalCount = Math.ceil(totalJobs / itemsPerPage);
+
+        return res.status(200).json({
+            error: false,
+            message: 'Job data fetched successfully!',
+            data: applyConsultantJobList,
+            totalCount: totalCount
+        });
+    } catch (error) {
+        console.log('Error while fetching Job Data:', error);
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to fetch Job List!'
+        });
+    }
+};
+
+// company change consultant list
+const changeConsultantApplyJobStatus = async (req, res) => {
+    try {
+        const { applicationId, newStatus, userId } = req.body;
+        const userInfo = req?.userInfo;
+
+        // 0 => Pending, 1 => Accepted, 2 => Rejected
+        const validStatuses = [0, 1, 2];
+        if (!validStatuses.includes(newStatus)) {
+            return res.status(400).json({
+                error: true,
+                message: 'Invalid status value!',
+            });
+        }
+
+        const application = await consultantApplyjobSchema.findOne({
+            where: {
+                id: applicationId,
+                company_id: userInfo?.id,
+                consultant_id: userId
+            },
+        });
+
+        if (!application) {
+            return res.status(404).json({
+                error: true,
+                message: 'Application not found!',
+            });
+        }
+
+        await consultantApplyjobSchema.update(
+            { status: newStatus },
+            { where: { id: applicationId } }
+        );
+
+        return res.status(200).json({
+            error: false,
+            message: 'Application status updated successfully!',
+        });
+    } catch (error) {
+        console.log('Error while updating application status:', error);
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to update application status!',
+        });
+    }
+}
+
 module.exports = {
     signup,
     signIn,
@@ -502,5 +635,7 @@ module.exports = {
     scheduleGoogleMeet,
     companySavedConsultant,
     getCompanySavedConsultant,
-    addSearchCandidate
+    addSearchCandidate,
+    getConsultantApplyjobList,
+    changeConsultantApplyJobStatus
 }
