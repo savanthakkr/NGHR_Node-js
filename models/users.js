@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
                 onDelete: 'cascade'
             });
 
-            users.hasOne(models.users_experiences, {
+            users.hasMany(models.users_experiences, {
                 foreignKey: "user_id",
                 onDelete: 'cascade'
             });
