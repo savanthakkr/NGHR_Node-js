@@ -200,7 +200,9 @@ const getConnectionByStatus = async (req, res) => {
             where: {
                 [Op.or]: [
                     { sender_user_id: userId },
-                    { sender_company_id: userId }
+                    { sender_company_id: userId },
+                    { receiver_user_id: userId },
+                    { receiver_company_id: userId }
                 ],
                 from: userInfo?.type === 'User' ? 'user' : 'company'
             },

@@ -239,7 +239,6 @@ const updateUserProfile = async (req, res) => {
 const getCompanyList = async (req, res) => {
     try {
         const userInfo = req?.userInfo;
-
         if (!userInfo) {
             return res.status(401).json({ error: true, message: 'Unauthorized access!' });
         }
@@ -297,6 +296,7 @@ const getCompanyList = async (req, res) => {
             where: { ...filters },
             include: [
                 {
+                    required: false,
                     model: postJobSchema,
                     where: { ...jobQuery },
                     attributes: ['id', 'basic_job_title', 'location'],
