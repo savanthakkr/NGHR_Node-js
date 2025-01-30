@@ -876,6 +876,57 @@ const signOut = async (req, res) => {
     }
 }
 
+// candidate consultant user list
+const candidateConsultantUserList = async (req, res) => {
+    try {
+        const bodyData = req?.body;
+
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        const data = await userSchema.findAll({
+            include: [
+                {
+                    model: userDocumentSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: userEductionsSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                },
+                {
+                    model: userExperienceSchema,
+                    attributes: { exclude: ["createdAt", "updatedAt"] },
+                }
+            ],
+            limit: itemsPerPage,
+            offset: offset,
+        });
+
+        const totalUser = await userSchema.count();
+
+        const totalPageCount = Math.ceil(totalUser / itemsPerPage);
+
+        if (!data) {
+            res.status(400).json({ error: true, message: 'User not found!!' });
+            return;
+        };
+
+        res
+            .status(200)
+            .json({
+                error: false, message: "Request has been completed successfully!!",
+                data: data,
+                userCount: totalUser,
+                pageCount: totalPageCount
+            });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: true, message: 'Failed to get data!' });
+        return;
+    }
+}
 module.exports = {
     userRegister,
     signIn,
@@ -898,5 +949,6 @@ module.exports = {
     getUserById,
     signOut,
     updateUserExperience,
-    getUserEduction
+    getUserEduction,
+    candidateConsultantUserList
 }

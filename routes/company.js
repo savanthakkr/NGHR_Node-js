@@ -7,7 +7,9 @@ const { signup, signIn, getCompanyUserByAuthToken,
     updateUserProfile, getCompanyList, getCompanyById,
     scheduleGoogleMeet, companySavedConsultant,
     getCompanySavedConsultant,
-    addSearchCandidate
+    addSearchCandidate,
+    getConsultantApplyjobList,
+    changeConsultantApplyJobStatus
 } = require('../controllers/companies.js');
 
 const conditionalAuth = (req, res, next) => {
@@ -47,5 +49,10 @@ router.route('/save/job').get(userAuth, getCompanySavedConsultant);
 // add search candidate
 router.route('/add/search/candidate').post(userAuth, addSearchCandidate);
 
+// apply consultant list
+router.route('/get/consultant/job/list').post(userAuth, getConsultantApplyjobList);
+
+// company change consultant list
+router.route('/get/consultant/change/job/status').post(userAuth, changeConsultantApplyJobStatus);
 
 module.exports = router;

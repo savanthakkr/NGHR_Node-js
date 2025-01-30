@@ -13,7 +13,7 @@ const { signup,
     getUserByAuthToken,
     getJobList,
     getJobListById,
-    consultantApplyJob
+    consultantApplyJob,
 } = require('../controllers/consultants.js');
 const { userAuth } = require('../middleware/authentication.js');
 
@@ -76,5 +76,6 @@ router.route('/auth/user/jobs/:id').get(userAuth, getJobListById);
 
 // consultant add job
 router.route('/auth/user/apply/job').post(userAuth, consultantApplyJob);
+
 
 module.exports = router;

@@ -642,7 +642,6 @@ const consultantApplyJob = async (req, res) => {
     }
 };
 
-
 module.exports = {
     signup,
     signin,
