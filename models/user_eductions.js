@@ -104,7 +104,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true
         },
         additional_feedback: {
-            type: DataTypes.STRING(100),
+            type: DataTypes.STRING(410),
             allowNull: true
         },
         plan_id: {

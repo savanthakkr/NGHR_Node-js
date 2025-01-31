@@ -156,7 +156,7 @@ const getUserApplicationList = async (req, res) => {
             error: false,
             message: 'Uer data fetched successfully!',
             data: applyJobList,
-            totalCount: totalCount
+            totalCount: totalCount,
         });
     } catch (error) {
         console.log('Error while fetching User Data:', error);
@@ -168,7 +168,7 @@ const getUserApplicationList = async (req, res) => {
 }
 
 // get job listing by the company id
-const getJobListByCompanyId = async (req, res) => {
+const getJobListByCompanyId = async (req, res) => {  // ✅ Make sure async is here
     try {
         const userInfo = req?.userInfo;
         const bodyData = req?.body;
@@ -177,6 +177,7 @@ const getJobListByCompanyId = async (req, res) => {
         const itemsPerPage = bodyData?.itemsPerPage || 5;
         const offset = (currentPage - 1) * itemsPerPage;
 
+        // ✅ `await` works properly inside an async function
         const applyJobList = await postJobSchema.findAll({
             attributes: [
                 'id',
@@ -184,24 +185,24 @@ const getJobListByCompanyId = async (req, res) => {
                 'status',
                 [
                     sequelize.literal(`(
-                        SELECT COUNT(*)
-                        FROM user_apply_jobs
+                        SELECT COUNT(*) 
+                        FROM user_apply_jobs 
                         WHERE user_apply_jobs.job_id = post_job_vaccancies.id
                     )`),
                     'totalApplications'
                 ],
                 [
                     sequelize.literal(`(
-                        SELECT COUNT(*)
-                        FROM user_apply_jobs
-                        WHERE user_apply_jobs.job_id = post_job_vaccancies.id AND user_apply_jobs.status = 2
+                        SELECT COUNT(*) 
+                        FROM user_apply_jobs 
+                        WHERE user_apply_jobs.job_id = post_job_vaccancies.id
+                            AND user_apply_jobs.status = 2
                     )`),
                     'shortlistedApplications'
                 ]
             ],
             where: {
                 company_id: userInfo?.id,
-                // status: 1
             },
             include: [
                 {
@@ -236,6 +237,7 @@ const getJobListByCompanyId = async (req, res) => {
         });
     }
 };
+
 
 // update job status by company id
 const updateJobStatus = async (req, res) => {
