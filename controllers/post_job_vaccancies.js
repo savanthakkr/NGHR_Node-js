@@ -155,7 +155,6 @@ const getUserApplicationList = async (req, res) => {
             message: 'Uer data fetched successfully!',
             data: applyJobList,
             totalCount: totalCount,
-            totalUserJob: totalUserJob
         });
     } catch (error) {
         console.log('Error while fetching User Data:', error);
