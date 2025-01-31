@@ -166,41 +166,75 @@ const getUserApplicationList = async (req, res) => {
 }
 
 // get job listing by the company id
-const applyJobList = await postJobSchema.findAll({
-    attributes: [
-        'id',
-        'basic_job_title',
-        'status',
-        [
-            sequelize.literal(`(
-                SELECT COUNT(*) 
-                FROM user_apply_jobs 
-                WHERE user_apply_jobs.job_id = postJobSchema.id
-            )`),
-            'totalApplications'
-        ],
-        [
-            sequelize.literal(`(
-                SELECT COUNT(*) 
-                FROM user_apply_jobs 
-                WHERE user_apply_jobs.job_id = postJobSchema.id
-                  AND user_apply_jobs.status = 2
-            )`),
-            'shortlistedApplications'
-        ]
-    ],
-    where: {
-        company_id: userInfo?.id,
-    },
-    include: [
-        {
-            model: companiesSchema,
-            attributes: ['id', 'company_name', 'image'],
-        }
-    ],
-    limit: itemsPerPage,
-    offset: offset,
-});
+const getJobListByCompanyId = async (req, res) => {  // ✅ Make sure async is here
+    try {
+        const userInfo = req?.userInfo;
+        const bodyData = req?.body;
+
+        const currentPage = bodyData?.currentPage || 1;
+        const itemsPerPage = bodyData?.itemsPerPage || 5;
+        const offset = (currentPage - 1) * itemsPerPage;
+
+        // ✅ `await` works properly inside an async function
+        const applyJobList = await postJobSchema.findAll({
+            attributes: [
+                'id',
+                'basic_job_title',
+                'status',
+                [
+                    sequelize.literal(`(
+                        SELECT COUNT(*) 
+                        FROM user_apply_jobs 
+                        WHERE user_apply_jobs.job_id = postJobSchema.id
+                    )`),
+                    'totalApplications'
+                ],
+                [
+                    sequelize.literal(`(
+                        SELECT COUNT(*) 
+                        FROM user_apply_jobs 
+                        WHERE user_apply_jobs.job_id = postJobSchema.id
+                          AND user_apply_jobs.status = 2
+                    )`),
+                    'shortlistedApplications'
+                ]
+            ],
+            where: {
+                company_id: userInfo?.id,
+            },
+            include: [
+                {
+                    model: companiesSchema,
+                    attributes: ['id', 'company_name', 'image'],
+                }
+            ],
+            limit: itemsPerPage,
+            offset: offset,
+        });
+
+        const totalJobs = await postJobSchema.count({
+            where: {
+                company_id: userInfo?.id,
+            }
+        });
+
+        const totalCount = Math.ceil(totalJobs / itemsPerPage);
+
+        return res.status(200).json({
+            error: false,
+            message: 'Job data fetched successfully!',
+            data: applyJobList,
+            totalCount: totalCount
+        });
+    } catch (error) {
+        console.log('Error while fetching Job Data:', error);
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to fetch Job List!'
+        });
+    }
+};
+
 
 // update job status by company id
 const updateJobStatus = async (req, res) => {
