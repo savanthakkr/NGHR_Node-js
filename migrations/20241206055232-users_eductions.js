@@ -97,7 +97,7 @@ module.exports = {
         allowNull: true
       },
       additional_feedback: {
-        type: Sequelize.STRING(100),
+        type: Sequelize.STRING(410),
         allowNull: true
       },
       plan_id: {
