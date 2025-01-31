@@ -37,7 +37,7 @@ module.exports = {
         allowNull: false,
       },
       serviceDescription: {
-        type: Sequelize.STRING(255),
+        type: Sequelize.STRING(410),
         allowNull: false,
       },
       payment_milestones: {

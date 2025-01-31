@@ -204,7 +204,7 @@ const getConnectionByStatus = async (req, res) => {
                     { receiver_user_id: userId },
                     { receiver_company_id: userId }
                 ],
-                from: userInfo?.type === 'User' ? 'user' : 'company'
+                // from: userInfo?.type === 'User' ? 'user' : 'company'
             },
             include: [
                 {

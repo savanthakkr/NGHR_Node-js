@@ -102,10 +102,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        company_size: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
         location: {
             type: DataTypes.STRING(255),
             allowNull: true,
@@ -159,7 +155,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         description: {
-            type: DataTypes.STRING(255),
+            type: DataTypes.STRING(410),
             allowNull: true,
         },
         createdAt: {

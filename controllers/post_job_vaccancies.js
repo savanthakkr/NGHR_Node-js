@@ -3,6 +3,8 @@ const {
     companies: companiesSchema,
     user_apply_jobs: userApplyJobsSchema,
     users: userSchema,
+    user_saved_jobs: userSavedJobsSchema,
+    consultant_apply_jobs: consultantApplyJobSchema
 } = require("../models/index.js");
 const { Op, where } = require('sequelize');
 const sequelize = require('sequelize');
@@ -214,7 +216,7 @@ const getJobListByCompanyId = async (req, res) => {
         const totalJobs = await postJobSchema.count({
             where: {
                 company_id: userInfo?.id,
-                // status: 1
+                status: 1
             }
         });
 
@@ -324,6 +326,88 @@ const userApplyChangeJobStatus = async (req, res) => {
     }
 };
 
+// user dashboards counts
+const userDashboardCounts = async (req, res) => {
+    try {
+        const userInfo = req?.userInfo;
+
+        if (userInfo?.type === "Company") {
+            const totalAppliedJob = await userApplyJobsSchema.count();
+
+            const liveCloseJobCount = await postJobSchema.findAll({
+                attributes: [
+                    [sequelize.fn("COUNT", sequelize.literal("CASE WHEN status = 1 THEN 1 END")), "activeJobs"],
+                    [sequelize.fn("COUNT", sequelize.literal("CASE WHEN status = 0 THEN 1 END")), "closedJobs"]
+                ],
+                where: { company_id: userInfo?.id },
+                raw: true
+            });
+
+            const jobCounts = liveCloseJobCount[0] || { activeJobs: 0, closedJobs: 0 };
+
+            return res.status(200).json({
+                error: false,
+                message: 'Request successful',
+                totalAppliedJob,
+                liveJobs: jobCounts?.activeJobs,
+                closedJobs: jobCounts?.closedJobs
+            });
+        } else if (userInfo?.type === "User") {
+            const jobCounts = await userApplyJobsSchema.findAll({
+                attributes: [
+                    [sequelize.fn("COUNT", sequelize.col("id")), "totalAppliedJobs"],
+                    [sequelize.fn("COUNT", sequelize.literal("CASE WHEN status = 0 THEN 1 END")), "inReviewJobs"]
+                ],
+                where: { user_id: userInfo?.id },
+                raw: true
+            });
+
+            const result = jobCounts[0] || { totalAppliedJobs: 0, inReviewJobs: 0 };
+
+            const savedJob = await userSavedJobsSchema.count({
+                where: {
+                    user_id: userInfo?.id
+                }
+            });
+
+            return res.status(200).json({
+                error: false,
+                message: "Request successful",
+                totalAppliedJobs: result?.totalAppliedJobs,
+                inReviewJobs: result?.inReviewJobs,
+                savedJobs: savedJob
+            });
+        } else {
+            const jobCounts = await consultantApplyJobSchema.findAll({
+                attributes: [
+                    [sequelize.fn("COUNT", sequelize.col("id")), "totalAppliedJobs"],
+                    [sequelize.fn("COUNT", sequelize.literal("CASE WHEN status = 0 THEN 1 END")), "pendingJobs"],
+                    [sequelize.fn("COUNT", sequelize.literal("CASE WHEN status = 1 THEN 1 END")), "acceptedJobs"],
+                    [sequelize.fn("COUNT", sequelize.literal("CASE WHEN status = 2 THEN 1 END")), "rejectedJobs"]
+                ],
+                raw: true
+            });
+
+            const result = jobCounts[0] || { totalAppliedJobs: 0, pendingJobs: 0, acceptedJobs: 0, rejectedJobs: 0 };
+
+            return res.status(200).json({
+                error: false,
+                message: "Request successful",
+                totalAppliedJobs: result?.totalAppliedJobs,
+                pendingJobs: result?.pendingJobs,
+                acceptedJobs: result?.acceptedJobs,
+                rejectedJobs: result?.rejectedJobs
+            });
+
+        }
+    } catch (error) {
+        return res.status(500).json({
+            error: true,
+            message: 'Failed to get dashboards count!',
+        });
+    }
+}
+
 module.exports = {
     addJob,
     getJob,
@@ -331,5 +415,6 @@ module.exports = {
     getUserApplicationList,
     getJobListByCompanyId,
     updateJobStatus,
-    userApplyChangeJobStatus
+    userApplyChangeJobStatus,
+    userDashboardCounts
 }

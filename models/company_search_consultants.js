@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
         },
         serviceDescription: {
-            type: DataTypes.STRING(255),
+            type: DataTypes.STRING(410),
             allowNull: false,
         },
         payment_milestones: {

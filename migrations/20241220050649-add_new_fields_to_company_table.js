@@ -44,7 +44,7 @@ module.exports = {
     });
     await queryInterface.addColumn("companies", "description", {
       allowNull: true,
-      type: Sequelize.STRING(255),
+      type: Sequelize.STRING(410),
       after: 'revenue_range'
     });
   },

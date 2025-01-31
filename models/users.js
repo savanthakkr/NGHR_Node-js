@@ -112,7 +112,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         bio: {
-            type: DataTypes.STRING(255),
+            type: DataTypes.STRING(400),
             allowNull: true,
         },
         profile_image: {

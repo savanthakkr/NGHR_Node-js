@@ -45,10 +45,6 @@ module.exports = {
         type: Sequelize.STRING(255),
         allowNull: true,
       },
-      company_size: {
-        type: Sequelize.STRING(255),
-        allowNull: true,
-      },
       location: {
         type: Sequelize.STRING(255),
         allowNull: true,

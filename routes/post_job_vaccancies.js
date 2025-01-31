@@ -6,7 +6,8 @@ const { addJob, getJob, getJobById,
     getUserApplicationList,
     getJobListByCompanyId,
     updateJobStatus,
-    userApplyChangeJobStatus
+    userApplyChangeJobStatus,
+    userDashboardCounts
 } = require("../controllers/post_job_vaccancies.js");
 
 // add data 
@@ -29,5 +30,8 @@ router.route('/status').put(userAuth, updateJobStatus);
 
 // user apply change job status
 router.route('/apply-job/status').put(userAuth, userApplyChangeJobStatus);
+
+// user applied all counts -consultant -candidate -company
+router.route('/dashboard/count').get(userAuth, userDashboardCounts);
 
 module.exports = router;
