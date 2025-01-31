@@ -185,7 +185,7 @@ const getJobListByCompanyId = async (req, res) => {  // ✅ Make sure async is h
                     sequelize.literal(`(
                         SELECT COUNT(*) 
                         FROM user_apply_jobs 
-                        WHERE user_apply_jobs.job_id = postJobSchema.id
+                        WHERE user_apply_jobs.job_id = post_job_vaccancies.id
                     )`),
                     'totalApplications'
                 ],
@@ -193,7 +193,7 @@ const getJobListByCompanyId = async (req, res) => {  // ✅ Make sure async is h
                     sequelize.literal(`(
                         SELECT COUNT(*) 
                         FROM user_apply_jobs 
-                        WHERE user_apply_jobs.job_id = postJobSchema.id
+                        WHERE user_apply_jobs.job_id = post_job_vaccancies.id
                           AND user_apply_jobs.status = 2
                     )`),
                     'shortlistedApplications'
