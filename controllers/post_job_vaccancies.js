@@ -168,7 +168,7 @@ const getUserApplicationList = async (req, res) => {
 }
 
 // get job listing by the company id
-const getJobListByCompanyId = async (req, res) => {  // ✅ Make sure async is here
+const getJobListByCompanyId = async (req, res) => {
     try {
         const userInfo = req?.userInfo;
         const bodyData = req?.body;
@@ -177,7 +177,6 @@ const getJobListByCompanyId = async (req, res) => {  // ✅ Make sure async is h
         const itemsPerPage = bodyData?.itemsPerPage || 5;
         const offset = (currentPage - 1) * itemsPerPage;
 
-        // ✅ `await` works properly inside an async function
         const applyJobList = await postJobSchema.findAll({
             attributes: [
                 'id',
@@ -203,6 +202,7 @@ const getJobListByCompanyId = async (req, res) => {  // ✅ Make sure async is h
             ],
             where: {
                 company_id: userInfo?.id,
+                status: 1
             },
             include: [
                 {
