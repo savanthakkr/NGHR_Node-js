@@ -148,7 +148,7 @@ const getUserApplicationList = async (req, res) => {
             offset: offset,
         });
 
-        const totalUserJob = await userApplyJobsSchema.count();
+        const totalUserJob = await userApplyJobsSchema.count({ where: { company_id: userInfo?.id } });
 
         const totalCount = Math.ceil(totalUserJob / itemsPerPage);
 

@@ -2,7 +2,8 @@
 const {
     companies: companiesSchema,
     users: userSchema,
-    connections: connectionsSchema
+    connections: connectionsSchema,
+    consultants: consultantsSchema
 } = require("../models/index.js");
 const { Op } = require('sequelize');
 
@@ -13,18 +14,22 @@ const sendConnectionRequest = async (req, res) => {
         const senderId = req?.userInfo?.id;
         const senderType = req?.userInfo?.type;
 
-        let senderUserId = null, receiverUserId = null, senderCompanyId = null, receiverCompanyId = null;
+        let senderUserId = null, receiverUserId = null, senderCompanyId = null, receiverCompanyId = null, senderConsultantId = null, receiverConsultantId = null;
 
         if (senderType === 'User') {
             senderUserId = senderId;
         } else if (senderType === 'Company') {
             senderCompanyId = senderId;
+        } else {
+            senderConsultantId = senderId;
         }
 
         if (receiverType === 'User') {
             receiverUserId = receiverId;
         } else if (receiverType === 'Company') {
             receiverCompanyId = receiverId;
+        } else {
+            receiverConsultantId = receiverId;
         }
 
         const existingRequest = await connectionsSchema.findOne({
@@ -33,11 +38,13 @@ const sendConnectionRequest = async (req, res) => {
                 sender_company_id: senderCompanyId,
                 receiver_user_id: receiverUserId,
                 receiver_company_id: receiverCompanyId,
+                sender_consultant_id: senderConsultantId,
+                receiver_consultant_id: receiverConsultantId
             }
         });
 
         if (existingRequest) {
-            if (existingRequest.status === 2) {
+            if (existingRequest?.status === 2) {
                 await connectionsSchema.update({ status: 0 }, { where: { id: existingRequest?.id } });
                 return res.status(200).json({ message: 'Connection request reactivated.', connection: existingRequest });
             } else {
@@ -45,8 +52,8 @@ const sendConnectionRequest = async (req, res) => {
             }
         }
 
-        const from = senderType.toLowerCase();
-        const to = receiverType.toLowerCase();
+        const from = senderType?.toLowerCase() ?? 'consultant';
+        const to = receiverType?.toLowerCase();
 
         // Create a new connection request
         const connection = await connectionsSchema.create({
@@ -54,6 +61,8 @@ const sendConnectionRequest = async (req, res) => {
             sender_company_id: senderCompanyId,
             receiver_user_id: receiverUserId,
             receiver_company_id: receiverCompanyId,
+            sender_consultant_id: senderConsultantId,
+            receiver_consultant_id: receiverConsultantId,
             from,
             to,
             status: 0
@@ -202,7 +211,9 @@ const getConnectionByStatus = async (req, res) => {
                     { sender_user_id: userId },
                     { sender_company_id: userId },
                     { receiver_user_id: userId },
-                    { receiver_company_id: userId }
+                    { receiver_company_id: userId },
+                    { sender_consultant_id: userId },
+                    { receiver_consultant_id: userId }
                 ],
                 // from: userInfo?.type === 'User' ? 'user' : 'company'
             },
@@ -230,7 +241,19 @@ const getConnectionByStatus = async (req, res) => {
                     as: 'receiverCompany',
                     attributes: ['id', 'full_name'],
                     required: false
-                }
+                },
+                {
+                    model: consultantsSchema,
+                    as: 'senderConsultant',
+                    attributes: ['id', 'full_name'],
+                    required: false
+                },
+                {
+                    model: consultantsSchema,
+                    as: 'receiverConsultant',
+                    attributes: ['id', 'full_name'],
+                    required: false
+                },
             ],
         });
 
@@ -302,7 +325,7 @@ const getNonAcceptedRequests = async (req, res) => {
         } else if (userType === "Company") {
             whereCondition.receiver_company_id = userId;
         } else {
-            return res.status(400).json({ success: false, message: "Invalid user type." });
+            whereCondition.receiver_consultant_id = userId;
         }
 
         const data = await connectionsSchema.findAll({
@@ -317,6 +340,12 @@ const getNonAcceptedRequests = async (req, res) => {
                     model: companiesSchema,
                     as: "senderCompany",
                     attributes: ["id", "full_name"],
+                },
+                {
+                    model: consultantsSchema,
+                    as: 'senderConsultant',
+                    attributes: ['id', 'full_name'],
+                    required: false
                 },
             ],
         });
