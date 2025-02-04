@@ -28,6 +28,16 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'receiver_company_id',
                 as: 'receiverCompany',
             });
+
+            connections.belongsTo(models.consultants, {
+                foreignKey: 'sender_consultant_id',
+                as: 'senderConsultant',
+            });
+
+            connections.belongsTo(models.consultants, {
+                foreignKey: 'receiver_consultant_id',
+                as: 'receiverConsultant',
+            });
         }
     };
 
@@ -58,15 +68,25 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.BIGINT(20).UNSIGNED,
             references: { model: "companies", key: "id" }
         },
+        sender_consultant_id: {
+            allowNull: true,
+            type: DataTypes.BIGINT(20).UNSIGNED,
+            references: { model: "consultants", key: "id" }
+        },
+        receiver_consultant_id: {
+            allowNull: true,
+            type: DataTypes.BIGINT(20).UNSIGNED,
+            references: { model: "consultants", key: "id" }
+        },
         from: {
             allowNull: false,
             type: DataTypes.ENUM('user', 'company'),
-            comment: 'Indicates the type of sender (user or company)'
+            comment: 'Indicates the type of sender (user, company or consultant)'
         },
         to: {
             allowNull: false,
             type: DataTypes.ENUM('user', 'company'),
-            comment: 'Indicates the type of receiver (user or company)'
+            comment: 'Indicates the type of receiver (user, company or consultant)'
         },
         status: {
             allowNull: false,
