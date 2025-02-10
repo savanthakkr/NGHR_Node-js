@@ -421,7 +421,8 @@ const getUserExperience = async (req, res) => {
     try {
 
         const experiences = await userExperienceSchema.findAll({
-            where: { user_id: req?.params?.id, status: 1 }
+            where: { user_id: req?.params?.id, status: 1 },
+            order: [['createdAt', 'DESC']]
         });
 
         if (!experiences || experiences.length === 0) {

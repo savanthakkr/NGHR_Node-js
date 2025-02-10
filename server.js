@@ -27,13 +27,14 @@ const PORT = 3305;
 app.use(express.json({ limit: '100mb' }));
 app.use(bodyParser.json({ limit: '100mb' })); // Adjust the limit as needed
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-app.use(morgan('dev'));
-// app.use(cors());
-app.use(cors({
-    origin: 'https://nghr.fullstackresolutions.com',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true
-}));
+// app.use(morgan('dev')); // for log api request
+
+app.use(cors());
+// app.use(cors({
+//     origin: 'https://nghr.fullstackresolutions.com',
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     credentials: true
+// }));
 app.use(fileUpload());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session(sessionConfig));
@@ -46,6 +47,11 @@ const server = http.createServer(app);
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+// init socket
+const sockets = require('./config/socket.js');
+sockets.init(server);
+
 // Test the database connection
 testConnection()
 // testConnection()
