@@ -29,12 +29,12 @@ app.use(bodyParser.json({ limit: '100mb' })); // Adjust the limit as needed
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // app.use(morgan('dev')); // for log api request
 
-app.use(cors());
-// app.use(cors({
-//     origin: 'https://nghr.fullstackresolutions.com',
-//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//     credentials: true
-// }));
+// app.use(cors());
+app.use(cors({
+    origin: 'http://nghr.fullstackresolutions.com',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 app.use(fileUpload());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session(sessionConfig));
