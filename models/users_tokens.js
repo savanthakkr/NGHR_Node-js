@@ -37,6 +37,10 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             type: DataTypes.STRING(255),
         },
+        socket_id: {
+            allowNull: true,
+            type: DataTypes.STRING(255)
+        },
         user_id: {
             allowNull: true,
             type: DataTypes.BIGINT(20).UNSIGNED,
