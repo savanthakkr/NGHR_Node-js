@@ -31,7 +31,7 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // app.use(cors());
 app.use(cors({
-    origin: 'http://nghr.fullstackresolutions.com',
+    origin: 'http://demonghr.fullstackresolutions.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
