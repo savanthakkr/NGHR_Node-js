@@ -4,7 +4,7 @@ var jwt = require('jsonwebtoken');
 require('dotenv').config();
 const moment = require('moment');
 const { google } = require('googleapis');
-const serviceAccount = require('./service-account-key.json');
+// const serviceAccount = require('./service-account-key.json');
 const { GoogleAuth } = require('google-auth-library');
 const { v4: uuidv4 } = require('uuid');
 
@@ -66,13 +66,13 @@ const getDateRange = (period) => {
     return { startDate: startDate.toDate(), endDate: endDate.toDate() };
 };
 
-const auth = new GoogleAuth({
-    credentials: serviceAccount, // Path to your service account key file
-    scopes: [
-        'https://www.googleapis.com/auth/calendar',
-        'https://www.googleapis.com/auth/calendar.events',
-    ],
-});
+// const auth = new GoogleAuth({
+//     credentials: serviceAccount, // Path to your service account key file
+//     scopes: [
+//         'https://www.googleapis.com/auth/calendar',
+//         'https://www.googleapis.com/auth/calendar.events',
+//     ],
+// });
 
 // Initialize Google Calendar API client
 const generateGoogleMeetLink = async ({ summary, startDateTime, endDateTime }) => {
